@@ -34,7 +34,7 @@ The program enforces all access control via Anchor constraints and PDA derivatio
 
 **Role enabling flag:** The `enabled` field on Role accounts lets an org authority disable an entire role category for all holders simultaneously. This is a circuit-breaker for incidents: if a role is being abused, disabling it halts all check_role calls for that role without requiring individual revocations.
 
-**Expired memberships:** The `expires_at` field is checked in check_role against the on-chain clock. Expired memberships return `MembershipExpired`. Callers cannot bypass this check because check_role is the authoritative source.
+**Expired memberships:** The `expires_at` field is checked in check_role against the onchain clock. Expired memberships return `MembershipExpired`. Callers cannot bypass this check because check_role is the authoritative source.
 
 ---
 
