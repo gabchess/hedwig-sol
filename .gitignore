@@ -1,0 +1,21 @@
+# Anchor build artifacts
+.anchor/
+target/
+
+# Node dependencies
+node_modules/
+.yarn/
+
+# Environment and secrets
+.env
+.env.local
+*.pem
+id.json
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
