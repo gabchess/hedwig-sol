@@ -38,13 +38,8 @@ fn test_create_org() {
     );
 
     let blockhash = svm.latest_blockhash();
-    let msg = Message::new_with_blockhash(
-        &[instruction],
-        Some(&authority.pubkey()),
-        &blockhash,
-    );
-    let tx =
-        VersionedTransaction::try_new(VersionedMessage::Legacy(msg), &[authority]).unwrap();
+    let msg = Message::new_with_blockhash(&[instruction], Some(&authority.pubkey()), &blockhash);
+    let tx = VersionedTransaction::try_new(VersionedMessage::Legacy(msg), &[authority]).unwrap();
 
     let res = svm.send_transaction(tx);
     assert!(res.is_ok(), "create_org failed: {:?}", res.err());
