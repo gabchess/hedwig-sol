@@ -28,11 +28,29 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
+      - name: Cache Solana toolchain
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/solana/install
+          key: ${{ runner.os }}-solana-v4.0.1
+
       - name: Check formatting
         run: cargo fmt --all -- --check
 
       - name: Build
         run: cargo build --verbose
+
+      - name: Install Solana (Agave) toolchain
+        run: |
+          if [ ! -x "$HOME/.local/share/solana/install/active_release/bin/solana" ]; then
+            sh -c "$(curl -sSfL https://release.anza.xyz/v4.0.1/install)"
+          fi
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
+
+      - name: Build on-chain program (.so)
+        run: |
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          cargo build-sbf --manifest-path programs/hedwig_sol/Cargo.toml
 
       - name: Test
         run: cargo test --verbose
