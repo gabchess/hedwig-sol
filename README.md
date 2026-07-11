@@ -10,7 +10,7 @@ An onchain roles primitive for Solana: define a role, assign it to a wallet, a p
 
 ## The problem
 
-Solana has no composable, onchain primitive for "who is authorized to do what." That gap already has a body count.
+Solana has no composable, onchain primitive for "who is authorized to do what." That gap already creates real risk.
 
 **Multisig signer management is all-or-nothing.** When a contributor leaves a 3-of-5 multisig, the team runs a full proposal cycle to remove them. There is no "this person held the Treasurer role, revoke it everywhere" as a single atomic action. The ~$285M Drift Protocol exploit (April 2026) was social engineering of multisig signers, not a contract bug: the code held, the access model did not.
 
@@ -51,7 +51,7 @@ We would rather tell you what is not done than let you find out later. See [Road
 
 Hedwig deliberately keeps its core surface small, so the program can eventually be frozen and trusted as an immutable primitive. Three places where that discipline is a decision, not an oversight:
 
-**Flat roles, not a hierarchy.** An org has roles, roles have members, and that is the entire tree: no nested sub-roles, no role-spawns-role state machine. A program small enough to eventually freeze needs to stay small enough to audit. Role trees and scoped sub-role composition belong in wrapper programs built on top of Hedwig, not inside the core.
+**Flat roles, not a hierarchy.** An org has roles, and roles have members. That is the full account layout, not a recursive role hierarchy: no nested sub-roles, no role-spawns-role state machine. A program small enough to eventually freeze needs to stay small enough to audit. Scoped sub-role composition belongs in wrapper programs built on top of Hedwig, not inside the core.
 
 **No agent-to-agent delegation in the core.** `assign_role` and `revoke_role` are admin-only (see [Instructions](#instructions) below). A holder, including an agent holder, cannot grant a scoped sub-role to another agent; only the role admin can assign or revoke. Delegation chains are exactly the kind of complexity a flat-forever core is designed to exclude. A wrapper program that lets an admin grant a bounded, scoped delegation capability to a holder is a reasonable pattern to build; it is out of scope here.
 
@@ -133,7 +133,7 @@ Full findings and remediation status: [THREAT-MODEL.md](THREAT-MODEL.md) and the
 
 For the repo-level architecture map, folder conventions, and ADR pointers, see [docs/architecture.md](docs/architecture.md) and [docs/adr/index.md](docs/adr/index.md).
 
-### PDA tree
+### PDA account layout
 
 ```
 Authority wallet
@@ -183,7 +183,7 @@ Milestone-based roadmap with falsifiable done-when conditions: [ROADMAP.md](ROAD
 
 ## Development
 
-See [Quickstart](#quickstart) above. Standing context for contributors and AI agents: [AGENTS.md](AGENTS.md).
+See [Quickstart](#quickstart) above. Contributor setup and review expectations live in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 

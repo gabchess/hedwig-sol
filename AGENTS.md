@@ -4,7 +4,7 @@ Standing context for any AI coding agent working in this repo. Read this before 
 
 ## What Hedwig is
 
-Solana has no composable onchain primitive for "who is authorized to do what": multisig member changes need a full proposal cycle, upgrade authority is usually a single hot wallet, and autonomous agents get raw private keys instead of scoped permissions. Hedwig fixes that with a PDA-anchored role tree: `Org PDA -> Role PDA -> Member PDA`. Any program can CPI into `check_role` to verify membership (holder + role enabled + not expired) in one instruction.
+Solana has no composable onchain primitive for "who is authorized to do what": multisig member changes need a full proposal cycle, upgrade authority is usually a single hot wallet, and autonomous agents get raw private keys instead of scoped permissions. Hedwig fixes that with a PDA-anchored account layout: `Org PDA -> Role PDA -> Member PDA`. Any program can CPI into `check_role` to verify membership (holder + role enabled + not expired) in one instruction.
 
 Framing: roles as a composable onchain primitive for organizations, usable by a person, a team, or an autonomous agent. Hedwig is an original, Solana-native program. The name is locked to "Hedwig" alone.
 
@@ -22,7 +22,7 @@ Framing: roles as a composable onchain primitive for organizations, usable by a 
 ## Conventions
 
 - CI gate (`.github/workflows/ci.yml`): `cargo fmt --check`, `cargo build`, `cargo build-sbf`, `cargo test` on ubuntu-latest. Match it before proposing any change.
-- Tests use LiteSVM: per-instruction and lifecycle test files under `programs/hedwig_sol/tests/` (22 tests).
+- Tests use LiteSVM: per-instruction and lifecycle test files under `programs/hedwig_sol/tests/` (21 tests).
 - Project source carries zero TODO/FIXME/unimplemented markers. Keep it that way; anything unfinished goes in docs/tracker, not a code stub.
 - `app/demo.ts` is the canonical devnet e2e reference for the full role lifecycle.
 

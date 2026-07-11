@@ -12,7 +12,7 @@ Hedwig is an onchain roles primitive for Solana: define named roles, assign them
 
 ### M0: Core primitive (devnet)
 
-Five instructions live on devnet (`create_org`, `create_role`, `assign_role`, `revoke_role`, `check_role`). CI green (`cargo fmt`, `cargo build`, `cargo build-sbf`, `cargo test`). Threat model published. Devnet end-to-end demo script.
+The first five instructions live on devnet (`create_org`, `create_role`, `assign_role`, `revoke_role`, `check_role`). CI green (`cargo fmt`, `cargo build`, `cargo build-sbf`, `cargo test`). Threat model published. Devnet end-to-end demo script.
 
 ### M1: Security hardening
 
@@ -56,6 +56,6 @@ Deploy to mainnet, publish hosted docs, and merge a Squads CPI integration examp
 
 Hedwig deliberately keeps a small surface, so the program can eventually freeze as an immutable primitive:
 
-- **Flat roles, not a hierarchy.** An org has roles, roles have members. Role trees and scoped sub-role composition belong in wrapper programs built on top of Hedwig, not in the core.
+- **Flat roles, not a hierarchy.** An org has roles, and roles have members. That is the account layout, not a recursive role hierarchy. Scoped sub-role composition belongs in wrapper programs built on top of Hedwig, not in the core.
 - **No agent-to-agent delegation in the core.** `assign_role` and `revoke_role` are admin-only. A wrapper program can add scoped delegation; the core does not.
 - **No pluggable eligibility modules.** Eligibility logic (whether a pubkey may hold a role) lives in the calling program, checked via CPI, consistent with the flat-forever design.
