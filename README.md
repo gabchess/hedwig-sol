@@ -4,7 +4,7 @@
 
 An onchain roles primitive for Solana: define a role, assign it to a wallet, a program, or an agent, and revoke it in one transaction.
 
-**Status: devnet-live.** All 6 core instructions, including the `set_role_enabled` circuit breaker, are deployed and CI-green: `cargo build-sbf` and `cargo test` both exit 0, 22 tests passing, 0 failed. A static security audit ran 2026-07-10 with zero critical (P0) findings and three high-severity (P1) items; two are closed (see [Security](#security)), one remains open. See [THREAT-MODEL.md](THREAT-MODEL.md) for the full findings.
+**Status: devnet-live.** All 6 core instructions, including the `set_role_enabled` circuit breaker, are deployed and CI-green: `cargo build-sbf` and `cargo test` both exit 0, 21 integration tests passing, 0 failed. A static security audit ran 2026-07-10 with zero critical (P0) findings and three high-severity (P1) items; two are closed (see [Security](#security)), one remains open. See [THREAT-MODEL.md](THREAT-MODEL.md) for the full findings.
 
 ---
 
@@ -12,11 +12,11 @@ An onchain roles primitive for Solana: define a role, assign it to a wallet, a p
 
 Solana has no composable, onchain primitive for "who is authorized to do what." That gap already creates real risk.
 
-**Multisig signer management is all-or-nothing.** When a contributor leaves a 3-of-5 multisig, the team runs a full proposal cycle to remove them. There is no "this person held the Treasurer role, revoke it everywhere" as a single atomic action. The ~$285M Drift Protocol exploit (April 2026) was social engineering of multisig signers, not a contract bug: the code held, the access model did not.
+**Multisig signer management is all-or-nothing.** When a contributor leaves a 3-of-5 multisig, the team runs a full proposal cycle to remove them. There is no "this person held the Treasurer role, revoke it everywhere" as a single atomic action. Public signer compromise incidents keep showing the same pattern: the program code can be fine while the access model is too coarse.
 
 **Upgrade authority is a single hot wallet on most Solana programs.** Moving authority to a DAO governance program forces teams to publicly disclose security patches before deployment, creating an exploit window between announcement and fix. A time-limited, role-gated security council with automatic expiry is the obvious fix. Solana has no protocol primitive for it today.
 
-**Autonomous agents ship with full wallet access and no onchain permission boundary.** Prompt-based restrictions are not authorization. In one reported incident, an autonomous agent sent $250K-$400K to a stranger because nothing onchain stopped it. An onchain role that scopes what an agent can authorize is a different kind of guardrail: enforced by the runtime, not the prompt.
+**Autonomous agents ship with full wallet access and no onchain permission boundary.** Prompt-based restrictions are not authorization. If an agent controls a funded keypair directly, there is no Solana-native role boundary that says "this key may do X but not Y." An onchain role that scopes what an agent can authorize is a different kind of guardrail: enforced by the runtime, not the prompt.
 
 Same primitive, three audiences: a DAO ops lead who needs single-action offboarding the moment a contributor leaves, a security-conscious protocol founder who needs a time-limited security council instead of a single hot wallet, and an AI-agent builder who needs a permission boundary enforced onchain, not just described in a prompt. Hedwig does not distinguish between them. A `holder` is a pubkey. Whether that pubkey belongs to a human wallet, a multisig, or an autonomous agent's keypair is invisible to the program, and that is the point: one scoped-authority primitive for all three.
 
@@ -37,7 +37,7 @@ Any Solana program can CPI into Hedwig to verify role membership in a single ins
 | | Built (devnet) | Planned |
 |---|---|---|
 | Core instructions | `create_org`, `create_role`, `assign_role`, `revoke_role`, `check_role`, `set_role_enabled` | None. The instruction set is stable at six. |
-| Testing | 22 tests: negative-authorization invariants (non-admin, wrong holder, wrong role, expired, revoked, duplicate assignment), full lifecycle, create_org edge cases, circuit-breaker coverage | Continued expansion as new surface area lands |
+| Testing | 21 integration tests: negative-authorization invariants (non-admin, wrong holder, wrong role, expired, revoked, duplicate assignment), full lifecycle, create_org edge cases, circuit-breaker coverage | Continued expansion as new surface area lands |
 | SDK | RFC only (`docs/sdk-rfc.md`) | TypeScript SDK, published to npm as `@hedwig-sol/sdk` |
 | Upgrade authority | Single deployer keypair | 2-of-3 Squads multisig |
 | Reference integration | Devnet e2e demo script (`app/demo.ts`) | Documented secure CPI consumer pattern showing how to authenticate a `holder` before trusting `check_role` |
@@ -55,7 +55,7 @@ Hedwig deliberately keeps its core surface small, so the program can eventually 
 
 **No agent-to-agent delegation in the core.** `assign_role` and `revoke_role` are admin-only (see [Instructions](#instructions) below). A holder, including an agent holder, cannot grant a scoped sub-role to another agent; only the role admin can assign or revoke. Delegation chains are exactly the kind of complexity a flat-forever core is designed to exclude. A wrapper program that lets an admin grant a bounded, scoped delegation capability to a holder is a reasonable pattern to build; it is out of scope here.
 
-**No pluggable eligibility modules.** Hedwig's core does not decide who should be allowed to hold a role: stake-gated, NFT-gated, vote-gated, or otherwise. That logic lives in the calling program, checked via CPI before it assigns or trusts a role. Same posture as the two points above: the primitive stays small, the integrator owns the gating logic.
+**No pluggable eligibility modules.** Hedwig's core does not decide who is eligible to receive or use a role: stake-gated, NFT-gated, vote-gated, or otherwise. The integrator owns two separate checks. Before assignment, it decides whether a pubkey is eligible to receive the role. Before use, it authenticates the actor it treats as the `holder` before trusting `check_role`. Same posture as the two points above: the primitive stays small, the integrator owns the gating logic.
 
 These are the tradeoffs for a program built to be frozen and trusted, not gaps on the way to a bigger feature set.
 
@@ -100,7 +100,7 @@ Devnet program: `H4J9wWhraK2Zvn4o9aFheFVmAf7nfaBNPw3d7w77X1eC`
 CPI example:
 
 ```rust
-// Verify the caller holds the "admin" role before proceeding.
+// Verify the supplied holder has the "admin" role before proceeding.
 hedwig_sol::cpi::check_role(
     CpiContext::new(
         ctx.accounts.hedwig_program.to_account_info(),
@@ -113,7 +113,7 @@ hedwig_sol::cpi::check_role(
 )?;
 ```
 
-If `check_role` returns `Ok(())`, the caller holds the role, the role is enabled, and membership has not expired. If it returns an error, the calling instruction reverts.
+If `check_role` returns `Ok(())`, the supplied `holder` has active membership for that role, the role is enabled, and membership has not expired. It does not prove that the transaction caller controls the `holder` key. If it returns an error, the calling instruction reverts.
 
 ---
 
@@ -122,7 +122,7 @@ If `check_role` returns `Ok(())`, the caller holds the role, the role is enabled
 We ran a static audit before seeking external integrations, not after. Result: zero P0 (critical) findings, no path to falsify an `Org`, `Role`, or `Member` account, no bypass of admin/authority constraints. Three P1 (high) findings came out of that audit. Two are closed:
 
 1. **Closed.** The circuit-breaker gap. `set_role_enabled` did not exist when the audit ran; it exists now, is admin-gated, emits an event, and is covered by tests.
-2. **Closed.** Authorization invariant coverage. The test suite grew from one happy-path test to 22 tests covering non-admin actions, wrong holder, wrong role, expired and revoked memberships, duplicate assignment, and the circuit breaker itself.
+2. **Closed.** Authorization invariant coverage. The test suite grew from one happy-path test to 21 integration tests covering non-admin actions, wrong holder, wrong role, expired and revoked memberships, duplicate assignment, and the circuit breaker itself.
 3. **Open.** `check_role` proves membership, not caller identity. Integrators must authenticate the `holder` themselves. A reference consumer demonstrating the correct pattern (a `Signer` or validated-PDA check before trusting `check_role`) is still planned, not shipped.
 
 Full findings and remediation status: [THREAT-MODEL.md](THREAT-MODEL.md) and the Roadmap section below.
@@ -156,7 +156,7 @@ Role state lives entirely onchain. No indexer, no off-chain cache. A CPI check r
 
 ### Privacy
 
-The `holder` field is a pubkey. Off-chain labels that map pubkeys to human identities are optional and stored off-chain. Public badges (e.g. Token-2022 non-transferable tokens) are a future roadmap item, not required.
+The `holder` field is a pubkey. Off-chain labels that map pubkeys to human identities are optional and stored off-chain. Public badges (e.g. Token-2022 non-transferable tokens) are a possible extension, not required by the core role primitive.
 
 ### One org per authority
 

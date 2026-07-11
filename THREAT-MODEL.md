@@ -10,7 +10,7 @@ This document describes the trust assumptions, known risks, and mitigations for 
 |---|---|---|
 | Org authority | The deploying wallet | Can create unlimited roles under the org |
 | Role admin | Set by org authority; defaults to same wallet | Can assign or revoke role memberships, and toggle the role's `enabled` flag |
-| Program upgrade authority | Deployer key (M0); 2-of-3 multisig (M1 target) | Can replace program logic entirely |
+| Program upgrade authority | Deployer key (devnet); 2-of-3 multisig planned before mainnet | Can replace program logic entirely |
 
 The program enforces all access control via Anchor constraints and PDA derivation. No off-chain component is involved in role checks.
 
@@ -18,13 +18,13 @@ The program enforces all access control via Anchor constraints and PDA derivatio
 
 ## Upgrade authority risk
 
-**Current state (M0):** The program upgrade authority is a single deployer keypair. This is the highest risk in the current deployment.
+**Current state (devnet):** The program upgrade authority is a single deployer keypair. This is the highest risk in the current deployment.
 
 **Mitigation plan:**
-- M1: upgrade authority transfers to a 2-of-3 Squads multisig. Any program upgrade requires 2 of 3 keyholders to sign.
-- M2: the program is either frozen (upgrade authority removed) or moved to a governance-controlled multisig with a 90-day community notice requirement before any upgrade.
+- Before mainnet: upgrade authority transfers to a 2-of-3 Squads multisig. Any program upgrade requires 2 of 3 keyholders to sign.
+- Freeze track: after external review and integration hardening, document the path to removing upgrade authority entirely.
 
-**Why not freeze at M0:** The program is in active development. Freezing before the invariant test suite is complete would lock in any bugs found during M1 testing.
+**Why not freeze now:** The program is still in active development. Freezing before the secure CPI reference and external review would lock in any bugs found during integration work.
 
 ---
 
@@ -63,16 +63,16 @@ The test suite covers the following invariants:
 - Closing a Member PDA decrements the role member_count by exactly 1
 - Re-assigning the same role to the same holder fails (init constraint prevents duplicate PDAs)
 
-22 tests pass across this suite as of the 2026-07-10 hardening pass. check_role proves PDA membership; it does not by itself prove the transaction caller controls the `holder` pubkey. Callers that need caller-identity guarantees must add their own `Signer` or validated-PDA check before trusting check_role. A documented reference consumer for that pattern is planned, not yet shipped.
+21 integration tests pass across this suite as of the 2026-07-10 hardening pass. check_role proves PDA membership; it does not by itself prove the transaction caller controls the `holder` pubkey. Callers that need caller-identity guarantees must add their own `Signer` or validated-PDA check before trusting check_role. A documented reference consumer for that pattern is planned, not yet shipped.
 
 ---
 
-## Out of scope for M0
+## Out of scope for the current devnet milestone
 
 - Spending caps on agent roles (M2+)
 - Time-locked security council with auto-expiry (M2+)
 - Cross-program role propagation hooks
-- Token-2022 non-transferable badge representation
+- Token-2022 non-transferable badge representation as an optional presentation layer
 - Formal verification
 
 ---

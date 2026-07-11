@@ -19,7 +19,7 @@ The first five instructions live on devnet (`create_org`, `create_role`, `assign
 - `set_role_enabled` (sixth instruction): an admin-gated circuit breaker that toggles a role's `enabled` flag and emits `RoleEnabledSet`, so an authority can disable a role in an incident without revoking members individually.
 - `assign_role` rejects a past or negative `expires_at` (`expires_at == 0` for never-expires, otherwise strictly in the future).
 - Checked arithmetic on every counter (overflow and underflow return a domain error).
-- Test suite expanded from one happy-path test to 22: the full negative-authorization invariant set (non-admin assign/revoke, non-authority `create_role`, wrong holder, wrong role, expired membership, revoked membership, duplicate assignment), full lifecycle coverage, `create_org` edge cases, and the circuit-breaker path.
+- Test suite expanded from one happy-path test to 21 integration tests: the full negative-authorization invariant set (non-admin assign/revoke, non-authority `create_role`, wrong holder, wrong role, expired membership, revoked membership, duplicate assignment), full lifecycle coverage, `create_org` edge cases, and the circuit-breaker path.
 - Verified: `cargo build-sbf` and `cargo test` both exit 0.
 
 **Open, carried to M3:** a documented reference CPI consumer that authenticates the `holder` (via a `Signer` or a validated PDA) before trusting `check_role`. The test suite proves the PDA-derivation invariant holds; the integrator-facing consumer pattern is not shipped yet.
@@ -58,4 +58,4 @@ Hedwig deliberately keeps a small surface, so the program can eventually freeze 
 
 - **Flat roles, not a hierarchy.** An org has roles, and roles have members. That is the account layout, not a recursive role hierarchy. Scoped sub-role composition belongs in wrapper programs built on top of Hedwig, not in the core.
 - **No agent-to-agent delegation in the core.** `assign_role` and `revoke_role` are admin-only. A wrapper program can add scoped delegation; the core does not.
-- **No pluggable eligibility modules.** Eligibility logic (whether a pubkey may hold a role) lives in the calling program, checked via CPI, consistent with the flat-forever design.
+- **No pluggable eligibility modules.** Eligibility logic (whether a pubkey may receive or use a role) lives in the integrating program. It should check assignment-time eligibility before granting a role, and authenticate the actor it treats as the `holder` before trusting `check_role`.

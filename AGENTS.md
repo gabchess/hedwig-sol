@@ -22,7 +22,7 @@ Framing: roles as a composable onchain primitive for organizations, usable by a 
 ## Conventions
 
 - CI gate (`.github/workflows/ci.yml`): `cargo fmt --check`, `cargo build`, `cargo build-sbf`, `cargo test` on ubuntu-latest. Match it before proposing any change.
-- Tests use LiteSVM: per-instruction and lifecycle test files under `programs/hedwig_sol/tests/` (21 tests).
+- Tests use LiteSVM: per-instruction and lifecycle test files under `programs/hedwig_sol/tests/` (21 integration tests).
 - Project source carries zero TODO/FIXME/unimplemented markers. Keep it that way; anything unfinished goes in docs/tracker, not a code stub.
 - `app/demo.ts` is the canonical devnet e2e reference for the full role lifecycle.
 
