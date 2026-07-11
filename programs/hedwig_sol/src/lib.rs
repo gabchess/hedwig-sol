@@ -42,4 +42,11 @@ pub mod hedwig_sol {
     pub fn check_role(ctx: Context<CheckRole>) -> Result<()> {
         check_role::handler(ctx)
     }
+
+    /// Enable or disable a role. Circuit breaker: halts `check_role` and new
+    /// `assign_role` calls for the whole role without revoking individual
+    /// members. Only the role admin can call this.
+    pub fn set_role_enabled(ctx: Context<SetRoleEnabled>, enabled: bool) -> Result<()> {
+        set_role_enabled::handler(ctx, enabled)
+    }
 }

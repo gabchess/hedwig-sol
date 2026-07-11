@@ -9,7 +9,7 @@ This document describes the trust assumptions, known risks, and mitigations for 
 | Component | Who controls it | Risk if compromised |
 |---|---|---|
 | Org authority | The deploying wallet | Can create unlimited roles under the org |
-| Role admin | Set by org authority; defaults to same wallet | Can assign or revoke role memberships |
+| Role admin | Set by org authority; defaults to same wallet | Can assign or revoke role memberships, and toggle the role's `enabled` flag |
 | Program upgrade authority | Deployer key (M0); 2-of-3 multisig (M1 target) | Can replace program logic entirely |
 
 The program enforces all access control via Anchor constraints and PDA derivation. No off-chain component is involved in role checks.
@@ -32,7 +32,7 @@ The program enforces all access control via Anchor constraints and PDA derivatio
 
 **PDA derivation:** All accounts are PDAs. An attacker cannot fake a Member PDA without controlling the seeds (role key + holder pubkey). Anchor's account validation verifies the derivation on every instruction.
 
-**Role enabling flag:** The `enabled` field on Role accounts lets an org authority disable an entire role category for all holders simultaneously. This is a circuit-breaker for incidents: if a role is being abused, disabling it halts all check_role calls for that role without requiring individual revocations.
+**Role enabling flag (circuit breaker):** The `enabled` field on Role accounts lets the role admin disable an entire role for all holders simultaneously. The `set_role_enabled` instruction toggles this field, is gated to the role admin (`has_one = admin`), and emits a `RoleEnabledSet` event. If a role is being abused, disabling it halts check_role and blocks new assign_role calls for that role without requiring the admin to revoke each Member PDA individually. This is implemented and covered by tests in `test_set_role_enabled.rs`.
 
 **Expired memberships:** The `expires_at` field is checked in check_role against the onchain clock. Expired memberships return `MembershipExpired`. Callers cannot bypass this check because check_role is the authoritative source.
 
@@ -50,17 +50,20 @@ There is no global state. Each org, role, and member account is independent. An 
 
 ---
 
-## M1 invariant test commitment
+## Invariant test coverage
 
-Before M1 ships, the test suite will cover the following invariants:
+The test suite covers the following invariants:
 
 - A holder with a revoked Member PDA fails check_role
 - A holder with an expired membership fails check_role
 - A disabled role fails check_role for all holders
 - A non-admin cannot assign or revoke role memberships
+- A non-admin cannot toggle a role's enabled flag
 - A non-authority cannot create roles under an org
 - Closing a Member PDA decrements the role member_count by exactly 1
 - Re-assigning the same role to the same holder fails (init constraint prevents duplicate PDAs)
+
+22 tests pass across this suite as of the 2026-07-10 hardening pass. check_role proves PDA membership; it does not by itself prove the transaction caller controls the `holder` pubkey. Callers that need caller-identity guarantees must add their own `Signer` or validated-PDA check before trusting check_role. A documented reference consumer for that pattern is planned, not yet shipped.
 
 ---
 

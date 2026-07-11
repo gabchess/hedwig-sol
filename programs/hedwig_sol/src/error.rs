@@ -22,11 +22,15 @@ pub enum HedwigError {
     #[msg("Role is disabled")]
     RoleDisabled,
 
-    /// The member account already exists for this holder and role.
-    #[msg("Holder already has this role")]
-    AlreadyAssigned,
-
     /// Membership has expired.
     #[msg("Role membership has expired")]
     MembershipExpired,
+
+    /// expires_at must be 0 (never-expires) or strictly in the future.
+    #[msg("expires_at must be zero or greater than the current time")]
+    InvalidExpiration,
+
+    /// A counter would overflow or underflow on this operation.
+    #[msg("Counter overflow or underflow")]
+    MathOverflow,
 }

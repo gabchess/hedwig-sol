@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
 use crate::{
-    constants::{MAX_ROLE_NAME_LEN, ROLE_SEED},
+    constants::{MAX_ROLE_NAME_LEN, ORG_SEED, ROLE_SEED},
     error::HedwigError,
     state::{Org, Role},
 };
@@ -30,7 +30,10 @@ pub fn handler(ctx: Context<CreateRole>, name: String) -> Result<()> {
     role.enabled = true;
     role.bump = ctx.bumps.role;
 
-    org.role_count = org.role_count.saturating_add(1);
+    org.role_count = org
+        .role_count
+        .checked_add(1)
+        .ok_or(HedwigError::MathOverflow)?;
 
     emit!(RoleCreated {
         role: role.key(),
@@ -56,7 +59,7 @@ pub struct CreateRole<'info> {
 
     #[account(
         mut,
-        seeds = [crate::constants::ORG_SEED, authority.key().as_ref()],
+        seeds = [ORG_SEED, authority.key().as_ref()],
         bump = org.bump,
         has_one = authority @ HedwigError::Unauthorized,
     )]

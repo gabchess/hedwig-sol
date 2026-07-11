@@ -3,6 +3,7 @@ pub mod check_role;
 pub mod create_org;
 pub mod create_role;
 pub mod revoke_role;
+pub mod set_role_enabled;
 
 // Glob re-exports are required by the Anchor macro for CPI client generation.
 // The `handler` name collision across modules is harmless at the crate level
@@ -17,3 +18,5 @@ pub use create_org::*;
 pub use create_role::*;
 #[allow(ambiguous_glob_reexports)]
 pub use revoke_role::*;
+#[allow(ambiguous_glob_reexports)]
+pub use set_role_enabled::*;

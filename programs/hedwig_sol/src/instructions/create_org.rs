@@ -11,7 +11,8 @@ use crate::{
 /// The org is the top-level namespace for a set of roles. The signer becomes
 /// the org authority and is the only one who can create roles or reassign authority.
 ///
-/// PDA seeds: [ORG_SEED, authority]
+/// PDA seeds: [ORG_SEED, authority] -- one org per authority is intentional
+/// (a deliberate cardinality decision, not an oversight).
 pub fn handler(ctx: Context<CreateOrg>, name: String) -> Result<()> {
     require!(
         !name.is_empty() && name.len() <= MAX_ORG_NAME_LEN,

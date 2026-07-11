@@ -15,7 +15,10 @@ use crate::{
 /// assign_role again.
 pub fn handler(ctx: Context<RevokeRole>) -> Result<()> {
     let role = &mut ctx.accounts.role;
-    role.member_count = role.member_count.saturating_sub(1);
+    role.member_count = role
+        .member_count
+        .checked_sub(1)
+        .ok_or(HedwigError::MathOverflow)?;
 
     emit!(RoleRevoked {
         role: role.key(),

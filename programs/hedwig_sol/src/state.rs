@@ -4,7 +4,6 @@ use anchor_lang::prelude::*;
 /// PDA seeds: ["org", authority]
 /// Authority is the pubkey that controls this org.
 #[account]
-#[derive(Default)]
 pub struct Org {
     /// The account that created this org and can manage its roles.
     pub authority: Pubkey,
@@ -24,7 +23,6 @@ impl Org {
 /// A named role under an org.
 /// PDA seeds: ["role", org_key, role_name_bytes (up to 32 bytes)]
 #[account]
-#[derive(Default)]
 pub struct Role {
     /// The org this role belongs to.
     pub org: Pubkey,

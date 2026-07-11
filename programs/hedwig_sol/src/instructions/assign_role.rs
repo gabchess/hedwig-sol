@@ -12,15 +12,20 @@ use crate::{
 /// a human wallet, a program-derived address, or an autonomous agent key.
 ///
 /// An optional `expires_at` timestamp (Unix seconds) can be set. Pass 0
-/// for no expiry.
+/// for no expiry; a non-zero value must be strictly in the future.
 ///
 /// PDA seeds: [MEMBER_SEED, role_key, holder]
 pub fn handler(ctx: Context<AssignRole>, expires_at: i64) -> Result<()> {
     let role = &mut ctx.accounts.role;
     require!(role.enabled, HedwigError::RoleDisabled);
 
-    let member = &mut ctx.accounts.member;
     let clock = Clock::get()?;
+    require!(
+        expires_at == 0 || expires_at > clock.unix_timestamp,
+        HedwigError::InvalidExpiration
+    );
+
+    let member = &mut ctx.accounts.member;
 
     member.role = role.key();
     member.holder = ctx.accounts.holder.key();
@@ -28,7 +33,10 @@ pub fn handler(ctx: Context<AssignRole>, expires_at: i64) -> Result<()> {
     member.expires_at = expires_at;
     member.bump = ctx.bumps.member;
 
-    role.member_count = role.member_count.saturating_add(1);
+    role.member_count = role
+        .member_count
+        .checked_add(1)
+        .ok_or(HedwigError::MathOverflow)?;
 
     emit!(RoleAssigned {
         member: member.key(),
