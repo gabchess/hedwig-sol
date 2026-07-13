@@ -1,6 +1,7 @@
 # Anchor build artifacts
 .anchor/
 target/
+.worktrees/
 
 # Node dependencies
 node_modules/
