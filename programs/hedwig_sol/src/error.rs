@@ -2,11 +2,11 @@ use anchor_lang::prelude::*;
 
 #[error_code]
 pub enum HedwigError {
-    /// Role name exceeds the 32-byte limit.
+    /// Role name is empty or exceeds the 32-byte limit.
     #[msg("Role name must be 1-32 bytes")]
     InvalidRoleName,
 
-    /// Org name exceeds the 64-byte limit.
+    /// Org name is empty or exceeds the 64-byte limit.
     #[msg("Org name must be 1-64 bytes")]
     InvalidOrgName,
 

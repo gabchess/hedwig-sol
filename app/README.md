@@ -1,7 +1,11 @@
-# Hedwig devnet demo
+# Hedwig devnet membership demo
 
-Runs the full Hedwig lifecycle against the live devnet deployment:
+Runs the five-instruction membership lifecycle against the recorded Hedwig
+devnet deployment:
 create_org, create_role, assign_role, check_role, revoke_role.
+
+The demo does not exercise `set_role_enabled`. That sixth instruction is
+implemented and tested locally but is not in the current devnet deployment.
 
 ## Prerequisites
 
@@ -41,8 +45,10 @@ Never commit an API key. Pass it as an environment variable only.
 
 ## What it does
 
-Each run creates a fresh org with a random name so it never collides with a
-previous run's onchain accounts. It prints one labeled line per instruction
-with the resulting transaction signature, reads back the role and member
-account state after `assign_role` to prove the onchain data is correct, and
-ends with `full lifecycle OK on devnet` on success.
+An Org PDA is derived from the wallet, not from the random display name. Each
+wallet can therefore run this demo once. Use a fresh funded wallet for another
+run.
+
+The script prints one labeled line per instruction with the resulting
+transaction signature, reads back the Role and Member account state after
+`assign_role`, and ends with `full lifecycle OK on devnet` on success.

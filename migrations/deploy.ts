@@ -1,12 +1,6 @@
-// Migrations are an early feature. Currently, they're nothing more than this
-// single deploy script that's invoked from the CLI, injecting a provider
-// configured from the workspace's Anchor.toml.
-
 import * as anchor from "@anchor-lang/core";
 
 module.exports = async function (provider: anchor.AnchorProvider) {
-  // Configure client to use the provider.
+  // Anchor injects the provider configured by the selected cluster and wallet.
   anchor.setProvider(provider);
-
-  // Add your deploy script here.
 };

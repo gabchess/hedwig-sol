@@ -10,7 +10,7 @@ use crate::{
 ///
 /// Only the org authority can create roles. The role name is embedded in the
 /// PDA seeds so it is immutable after creation. The role admin defaults to the
-/// org authority; it can be delegated separately via a future instruction.
+/// org authority. The current instruction set does not support admin rotation.
 ///
 /// PDA seeds: [ROLE_SEED, org_key, role_name_bytes]
 pub fn handler(ctx: Context<CreateRole>, name: String) -> Result<()> {

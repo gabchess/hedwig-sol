@@ -2,193 +2,139 @@
 
 **Grant roles, not keys.**
 
-An onchain roles primitive for Solana: define a role, assign it to a wallet, a program, or an agent, and revoke it in one transaction.
+Composable onchain roles for Solana. Assign a named role to any pubkey, set
+optional membership expiry, disable the role in an incident, and let any Solana
+program verify active membership via CPI.
 
-**Status: devnet-live.** All 6 core instructions, including the `set_role_enabled` circuit breaker, are deployed and CI-green: `cargo build-sbf` and `cargo test` both exit 0, 21 integration tests passing, 0 failed. A static security audit ran 2026-07-10 with zero critical (P0) findings and three high-severity (P1) items; two are closed (see [Security](#security)), one remains open. See [THREAT-MODEL.md](THREAT-MODEL.md) for the full findings.
-
----
-
-## The problem
-
-Solana has no composable, onchain primitive for "who is authorized to do what." That gap already creates real risk.
-
-**Multisig signer management is all-or-nothing.** When a contributor leaves a 3-of-5 multisig, the team runs a full proposal cycle to remove them. There is no "this person held the Treasurer role, revoke it everywhere" as a single atomic action. Public signer compromise incidents keep showing the same pattern: the program code can be fine while the access model is too coarse.
-
-**Upgrade authority is a single hot wallet on most Solana programs.** Moving authority to a DAO governance program forces teams to publicly disclose security patches before deployment, creating an exploit window between announcement and fix. A time-limited, role-gated security council with automatic expiry is the obvious fix. Solana has no protocol primitive for it today.
-
-**Autonomous agents ship with full wallet access and no onchain permission boundary.** Prompt-based restrictions are not authorization. If an agent controls a funded keypair directly, there is no Solana-native role boundary that says "this key may do X but not Y." An onchain role that scopes what an agent can authorize is a different kind of guardrail: enforced by the runtime, not the prompt.
-
-Same primitive, three audiences: a DAO ops lead who needs single-action offboarding the moment a contributor leaves, a security-conscious protocol founder who needs a time-limited security council instead of a single hot wallet, and an AI-agent builder who needs a permission boundary enforced onchain, not just described in a prompt. Hedwig does not distinguish between them. A `holder` is a pubkey. Whether that pubkey belongs to a human wallet, a multisig, or an autonomous agent's keypair is invisible to the program, and that is the point: one scoped-authority primitive for all three.
-
----
-
-## The solution
-
-Hedwig defines named roles, assigns them to a wallet, a program, or an agent, and revokes them in a single transaction. No centralized registry, no dependency on any DAO tool, composable via CPI.
-
-Program-derived accounts (PDAs) are the onchain proof of authority. An `Org` PDA is the top-level namespace, each `Role` PDA lives under an org, and each `Member` PDA proves one pubkey holds one role. The full seed and field layout is in [Architecture](#architecture) below.
-
-Any Solana program can CPI into Hedwig to verify role membership in a single instruction. The call either succeeds (holder has the role, role is enabled, membership has not expired) or returns an error the calling program can inspect.
-
----
-
-## What's built vs planned
-
-| | Built (devnet) | Planned |
-|---|---|---|
-| Core instructions | `create_org`, `create_role`, `assign_role`, `revoke_role`, `check_role`, `set_role_enabled` | None. The instruction set is stable at six. |
-| Testing | 21 integration tests: negative-authorization invariants (non-admin, wrong holder, wrong role, expired, revoked, duplicate assignment), full lifecycle, create_org edge cases, circuit-breaker coverage | Continued expansion as new surface area lands |
-| SDK | RFC only (`docs/sdk-rfc.md`) | TypeScript SDK, published to npm as `@hedwig-sol/sdk` |
-| Upgrade authority | Single deployer keypair | 2-of-3 Squads multisig |
-| Reference integration | Devnet e2e demo script (`app/demo.ts`) | Documented secure CPI consumer pattern showing how to authenticate a `holder` before trusting `check_role` |
-| Network | Devnet | Mainnet, after the above closes |
-
-We would rather tell you what is not done than let you find out later. See [Roadmap](#roadmap) below for the full milestone breakdown.
-
----
-
-## Design decisions
-
-Hedwig deliberately keeps its core surface small, so the program can eventually be frozen and trusted as an immutable primitive. Three places where that discipline is a decision, not an oversight:
-
-**Flat roles, not a hierarchy.** An org has roles, and roles have members. That is the full account layout, not a recursive role hierarchy: no nested sub-roles, no role-spawns-role state machine. A program small enough to eventually freeze needs to stay small enough to audit. Scoped sub-role composition belongs in wrapper programs built on top of Hedwig, not inside the core.
-
-**No agent-to-agent delegation in the core.** `assign_role` and `revoke_role` are admin-only (see [Instructions](#instructions) below). A holder, including an agent holder, cannot grant a scoped sub-role to another agent; only the role admin can assign or revoke. Delegation chains are exactly the kind of complexity a flat-forever core is designed to exclude. A wrapper program that lets an admin grant a bounded, scoped delegation capability to a holder is a reasonable pattern to build; it is out of scope here.
-
-**No pluggable eligibility modules.** Hedwig's core does not decide who is eligible to receive or use a role: stake-gated, NFT-gated, vote-gated, or otherwise. The integrator owns two separate checks. Before assignment, it decides whether a pubkey is eligible to receive the role. Before use, it authenticates the actor it treats as the `holder` before trusting `check_role`. Same posture as the two points above: the primitive stays small, the integrator owns the gating logic.
-
-These are the tradeoffs for a program built to be frozen and trusted, not gaps on the way to a bigger feature set.
-
----
-
-## Instructions
-
-| Instruction | Who signs | What it does |
-|---|---|---|
-| `create_org` | authority | Creates the org PDA |
-| `create_role` | org authority | Creates a named role under the org |
-| `assign_role` | role admin | Grants a role to any pubkey; optional expiry, rejects a past or negative `expires_at` |
-| `revoke_role` | role admin | Closes the member PDA, returns rent |
-| `check_role` | anyone (CPI-friendly) | Verifies membership; errors if the check fails |
-| `set_role_enabled` | role admin | Toggles a role's `enabled` flag, the circuit breaker. Disabling a role blocks `check_role` and `assign_role` for every holder without revoking individual memberships |
-
-All instructions except `check_role` emit an event for indexers and off-chain tooling. `check_role` does not mutate state, so it emits nothing; it is a pure read used inside a CPI.
-
-`check_role` proves membership. It does not by itself prove that the caller controls the `holder` pubkey being checked; the consuming program must independently authenticate whoever it treats as the holder (a `Signer`, a validated PDA, or an established identity from its own constraints). See [THREAT-MODEL.md](THREAT-MODEL.md) for the full authentication-composition note.
-
----
-
-## Quickstart
-
-**Requirements:** Rust, anchor-cli 1.0.2, solana-cli (Agave) 4.0.1+
-
-```bash
-# Build (SBF artifact required before tests)
-anchor build
-
-# Run tests (LiteSVM, no network required)
-cargo build-sbf --manifest-path programs/hedwig_sol/Cargo.toml
-cargo test
-
-# Deploy to devnet
-solana config set --url devnet
-anchor deploy --provider.cluster devnet
-```
+Hedwig is a devnet-stage Anchor program. The repository implements six
+instructions and covers them with 21 LiteSVM integration tests. The recorded
+devnet lifecycle exercises `create_org`, `create_role`, `assign_role`,
+`check_role`, and `revoke_role`. `set_role_enabled` is implemented and tested
+locally, but is not in the current devnet deployment.
 
 Devnet program: `H4J9wWhraK2Zvn4o9aFheFVmAf7nfaBNPw3d7w77X1eC`
 
-CPI example:
+## Why Hedwig
+
+Solana programs that need roles usually define their own account layout,
+authorization rules, expiry behavior, and revocation flow. Those implementations
+do not compose: a role recognized by one program has no standard meaning to
+another.
+
+Hedwig makes membership a small onchain primitive:
+
+- an `Org` is a role namespace;
+- a `Role` is a named authority within that org;
+- a `Member` records that one pubkey holds one role; and
+- `check_role` is the CPI entrypoint other programs can use to verify active
+  membership.
+
+The holder can be a wallet, multisig, program-derived identity, or agent key.
+Hedwig records membership; the consuming program decides what that role permits.
+
+## Current status
+
+| Surface | Current state |
+|---|---|
+| Anchor program | Six instructions implemented |
+| Tests | 21 LiteSVM integration tests |
+| Devnet evidence | Five-instruction membership lifecycle recorded |
+| Circuit breaker | Implemented and tested locally; devnet redeploy required |
+| TypeScript SDK | RFC only; not built or published |
+| Secure CPI consumer | Planned reference integration |
+| Upgrade authority | Single deployer key; 2-of-3 Squads transfer planned before mainnet |
+| Network | Devnet; mainnet is planned |
+
+See [ROADMAP.md](ROADMAP.md) for evidence-gated delivery milestones and
+[THREAT-MODEL.md](THREAT-MODEL.md) for the current trust boundaries.
+
+Deployment evidence was checked on 2026-07-13 with `solana program show`: the
+live program was last deployed at slot `468922773` on 2026-06-12, before
+`set_role_enabled` was added. Its upgrade-authority pubkey is
+`8gbaJEfM5VDs9BpFLgwMTq7s2FkVpEri8ZnPbxn4HPqY`.
+
+## Instructions
+
+| Instruction | Authorization | Effect |
+|---|---|---|
+| `create_org` | Authority signs | Creates the authority's org namespace |
+| `create_role` | Org authority signs | Creates an enabled named role under the org |
+| `assign_role` | Role admin signs | Creates a member PDA, optionally with expiry |
+| `revoke_role` | Role admin signs | Closes the member PDA and returns its rent to the admin |
+| `check_role` | No signer required | Returns success only for an enabled, unexpired membership |
+| `set_role_enabled` | Role admin signs | Enables or disables checks and new assignments for the role |
+
+The current program creates one org per authority. A role's admin is initialized
+to that org authority and cannot yet be changed. Disabling a role preserves its
+member accounts while causing `check_role` and new `assign_role` calls to fail.
+
+## Account model
+
+```text
+Org PDA       ["org", authority]
+  └─ Role PDA ["role", org, role_name]
+       └─ Member PDA ["member", role, holder]
+```
+
+The PDA seeds bind the namespace, role, and holder. Anchor account ownership,
+deserialization, seed, bump, and `has_one` constraints establish the account
+relationships used by each instruction.
+
+Role names are part of the role PDA seed and are therefore immutable. Membership
+expiry uses a Unix timestamp; `0` means no expiry. Revocation closes the member
+account, so a later grant creates it again.
+
+## Integrating with `check_role`
+
+`check_role` proves that the supplied `holder` pubkey has a valid member PDA for
+the supplied role, that the role is enabled, and that the membership has not
+expired. It does **not** prove that the transaction actor controls that holder.
+
+A consuming program must authenticate the actor first—for example with a
+`Signer<'info>` for a wallet or with its own validated PDA constraints—and pass
+that authenticated account as `holder`:
 
 ```rust
-// Verify the supplied holder has the "admin" role before proceeding.
-hedwig_sol::cpi::check_role(
-    CpiContext::new(
-        ctx.accounts.hedwig_program.to_account_info(),
-        hedwig_sol::cpi::accounts::CheckRole {
-            member: ctx.accounts.member.to_account_info(),
-            role: ctx.accounts.role.to_account_info(),
-            holder: ctx.accounts.caller.to_account_info(),
-        },
-    ),
-)?;
+hedwig_sol::cpi::check_role(CpiContext::new(
+    ctx.accounts.hedwig_program.to_account_info(),
+    hedwig_sol::cpi::accounts::CheckRole {
+        member: ctx.accounts.member.to_account_info(),
+        role: ctx.accounts.role.to_account_info(),
+        holder: ctx.accounts.actor.to_account_info(), // actor is authenticated here
+    },
+))?;
 ```
 
-If `check_role` returns `Ok(())`, the supplied `holder` has active membership for that role, the role is enabled, and membership has not expired. It does not prove that the transaction caller controls the `holder` key. If it returns an error, the calling instruction reverts.
+The CPI returns `Ok(())` on active membership and a Hedwig error otherwise. With
+the `?` shown above, a failed check aborts the consuming instruction. Hedwig does
+not return a boolean and does not grant transaction authority by itself.
 
----
+The Rust CPI interface currently comes from the program crate. The planned
+TypeScript SDK and reference consumer are tracked in [ROADMAP.md](ROADMAP.md).
 
-## Security
+## Run locally
 
-We ran a static audit before seeking external integrations, not after. Result: zero P0 (critical) findings, no path to falsify an `Org`, `Role`, or `Member` account, no bypass of admin/authority constraints. Three P1 (high) findings came out of that audit. Two are closed:
+Requirements: Rust, Anchor CLI 1.0.2, and Solana/Agave CLI 4.0.1 or newer.
 
-1. **Closed.** The circuit-breaker gap. `set_role_enabled` did not exist when the audit ran; it exists now, is admin-gated, emits an event, and is covered by tests.
-2. **Closed.** Authorization invariant coverage. The test suite grew from one happy-path test to 21 integration tests covering non-admin actions, wrong holder, wrong role, expired and revoked memberships, duplicate assignment, and the circuit breaker itself.
-3. **Open.** `check_role` proves membership, not caller identity. Integrators must authenticate the `holder` themselves. A reference consumer demonstrating the correct pattern (a `Signer` or validated-PDA check before trusting `check_role`) is still planned, not shipped.
-
-Full findings and remediation status: [THREAT-MODEL.md](THREAT-MODEL.md) and the Roadmap section below.
-
----
-
-## Architecture
-
-For the repo-level architecture map, folder conventions, and ADR pointers, see [docs/architecture.md](docs/architecture.md) and [docs/adr/index.md](docs/adr/index.md).
-
-### PDA account layout
-
-```
-Authority wallet
-    |
-    +-- Org PDA  [seeds: "org", authority]  {fields: authority, name, role_count}
-            |
-            +-- Role PDA  [seeds: "role", org, "treasurer"]  {fields: org, name, admin, member_count, enabled}
-            |       |
-            |       +-- Member PDA  [seeds: "member", role, holder_A]  {fields: role, holder, granted_at, expires_at}
-            |       +-- Member PDA  [seeds: "member", role, holder_B]
-            |
-            +-- Role PDA  [seeds: "role", org, "security-council"]
-                    |
-                    +-- Member PDA  [seeds: "member", role, multisig_key]
+```bash
+cargo fmt --check
+cargo build
+cargo build-sbf --manifest-path programs/hedwig_sol/Cargo.toml
+cargo test
 ```
 
-### Role checks
+The tests run with LiteSVM and do not require a network connection. To run the
+recorded membership lifecycle against devnet, see [app/README.md](app/README.md).
 
-Role state lives entirely onchain. No indexer, no off-chain cache. A CPI check reads two accounts (the Member PDA and the Role PDA) at the cost of any other account read on Solana.
+## Repository guide
 
-### Privacy
-
-The `holder` field is a pubkey. Off-chain labels that map pubkeys to human identities are optional and stored off-chain. Public badges (e.g. Token-2022 non-transferable tokens) are a possible extension, not required by the core role primitive.
-
-### One org per authority
-
-Each authority wallet can currently create exactly one org (the org PDA derives from `["org", authority]` alone). This is a namespace decision, not a bug; multi-org support would require a seed change and a migration plan, and is an open decision, not a silent default. See the Roadmap section below.
-
----
-
-## Upgrade authority
-
-The program upgrade authority is currently held by the deployer key. This is the single highest risk in the current deployment, and we say so plainly rather than bury it.
-
-- Next: transfer upgrade authority to a 2-of-3 Squads multisig
-- After that: document the path to freezing the program (removing upgrade authority entirely) with community notice
-
-See [THREAT-MODEL.md](THREAT-MODEL.md) for the full analysis.
-
----
-
-## Roadmap
-
-Milestone-based roadmap with falsifiable done-when conditions: [ROADMAP.md](ROADMAP.md).
-
----
-
-## Development
-
-See [Quickstart](#quickstart) above. Contributor setup and review expectations live in [CONTRIBUTING.md](CONTRIBUTING.md).
-
----
+- [docs/architecture.md](docs/architecture.md): domain boundaries and code map
+- [docs/adr/index.md](docs/adr/index.md): durable product and architecture decisions
+- [THREAT-MODEL.md](THREAT-MODEL.md): assets, trust boundaries, and open risks
+- [ROADMAP.md](ROADMAP.md): shipped evidence and remaining milestones
+- [docs/sdk-rfc.md](docs/sdk-rfc.md): historical SDK RFC; the SDK is not shipped
+- [CONTRIBUTING.md](CONTRIBUTING.md): contributor workflow and verification gates
 
 ## License
 
 MIT. See [LICENSE](LICENSE).
-
----

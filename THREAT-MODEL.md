@@ -1,82 +1,132 @@
-# Threat Model
+# Hedwig threat model
 
-This document describes the trust assumptions, known risks, and mitigations for the Hedwig onchain roles program.
+This document defines the security boundary of Hedwig's current repository program. It distinguishes checks enforced by Hedwig from checks an integrating program must perform. The live devnet deployment contains the first five instructions; the locally tested `set_role_enabled` circuit breaker requires a redeploy.
 
----
+Hedwig has not completed an external security review. The 21 LiteSVM integration tests are evidence of the tested behaviors below, not a substitute for one.
+
+## Assets and security properties
+
+Hedwig protects three kinds of state:
+
+- an `Org` identifies the authority allowed to create roles in its namespace;
+- a `Role` identifies its org and the admin allowed to manage memberships or disable the role;
+- a `Member` identifies one holder's membership in one role, with optional expiry.
+
+The program is intended to enforce these properties:
+
+1. Only an org authority can create a role under that org.
+2. Only a role admin can assign or revoke membership and toggle that role.
+3. A successful `check_role` means the supplied holder has the supplied role, the role is enabled, and the membership has not expired.
+4. Revoking a membership or disabling its role makes subsequent checks fail.
+5. Failed instructions do not partially update counters or close accounts.
 
 ## Trust assumptions
 
-| Component | Who controls it | Risk if compromised |
+| Component | Current controller | Consequence if compromised |
 |---|---|---|
-| Org authority | The deploying wallet | Can create unlimited roles under the org |
-| Role admin | Set by org authority; defaults to same wallet | Can assign or revoke role memberships, and toggle the role's `enabled` flag |
-| Program upgrade authority | Deployer key (devnet); 2-of-3 multisig planned before mainnet | Can replace program logic entirely |
+| Org authority | Signer that created the org | Can create any role in that org. The authority cannot currently be rotated. |
+| Role admin | Org authority recorded when the role is created | Can assign and revoke memberships and enable or disable the role. The admin cannot currently be rotated. |
+| Program upgrade authority | Pubkey `8gba...HPqY`, operationally recorded as deployer-controlled | Can replace all program logic. This is the highest current deployment risk. |
+| Solana runtime and Clock sysvar | Solana validator consensus | Supply account ownership, transaction atomicity, signatures, and time used by expiry checks. |
+| Integrating program | Its own upgrade and instruction authorities | Must authenticate the actor whose membership it asks Hedwig to check. |
 
-The program enforces all access control via Anchor constraints and PDA derivation. No off-chain component is involved in role checks.
+No offchain service, indexer, or cache participates in an onchain role check.
 
----
+## Account identity and substitution
 
-## Upgrade authority risk
+PDA seeds are public; secrecy of seeds is not a security control. Hedwig relies on Solana program ownership and Anchor account validation:
 
-**Current state (devnet):** The program upgrade authority is a single deployer keypair. This is the highest risk in the current deployment.
+- account discriminators establish the expected account type;
+- PDA seeds and stored bumps bind each account to its canonical address;
+- `has_one` constraints bind stored relationships such as member-to-role, member-to-holder, org-to-authority, and role-to-admin;
+- required authorities and admins are transaction signers on mutating instructions.
 
-**Mitigation plan:**
-- Before mainnet: upgrade authority transfers to a 2-of-3 Squads multisig. Any program upgrade requires 2 of 3 keyholders to sign.
-- Freeze track: after external review and integration hardening, document the path to removing upgrade authority entirely.
+A discriminator alone does not prove that an account is the correct org, role, or member. The seed and relationship constraints provide that binding.
 
-**Why not freeze now:** The program is still in active development. Freezing before the secure CPI reference and external review would lock in any bugs found during integration work.
+The canonical addresses are:
 
----
+```text
+Org:    ["org", authority]
+Role:   ["role", org, role_name]
+Member: ["member", role, holder]
+```
 
-## Account-spoofing considerations
+This layout allows one `Org` per authority and one `Role` per name within an org. It also prevents duplicate membership for the same role-holder pair while the original `Member` account exists.
 
-**PDA derivation:** All accounts are PDAs. An attacker cannot fake a Member PDA without controlling the seeds (role key + holder pubkey). Anchor's account validation verifies the derivation on every instruction.
+## Caller authentication is an integration requirement
 
-**Role enabling flag (circuit breaker):** The `enabled` field on Role accounts lets the role admin disable an entire role for all holders simultaneously. The `set_role_enabled` instruction toggles this field, is gated to the role admin (`has_one = admin`), and emits a `RoleEnabledSet` event. If a role is being abused, disabling it halts check_role and blocks new assign_role calls for that role without requiring the admin to revoke each Member PDA individually. This is implemented and covered by tests in `test_set_role_enabled.rs`.
+`check_role` proves a statement about the supplied `holder` pubkey. It does not prove that the transaction caller controls that pubkey: `holder` is intentionally not a signer because programs may need to check wallets, multisigs, or program-derived authorities.
 
-**Expired memberships:** The `expires_at` field is checked in check_role against the onchain clock. Expired memberships return `MembershipExpired`. Callers cannot bypass this check because check_role is the authoritative source.
+A consuming program must bind `holder` to the actor it intends to authorize before trusting a successful CPI. Depending on the integration, that means requiring a `Signer`, validating a PDA owned by the consumer, or applying another explicit identity constraint. Failing to do so can let a caller present someone else's active membership.
 
----
+A tested reference consumer demonstrating both signer and validated-PDA patterns is a prerequisite for partner integrations; it is not shipped yet.
 
-## Account confusion attacks
+## Membership lifecycle
 
-Anchor uses discriminators on all account types. A `Role` account cannot be passed as an `Org` account without Anchor rejecting the discriminator mismatch. This prevents account confusion attacks across the instruction set.
+### Assignment and expiry
 
----
+`assign_role` accepts `expires_at = 0` for a non-expiring membership. Any nonzero value must be strictly later than the current Clock timestamp at assignment.
 
-## Denial of service
+`check_role` treats the membership as valid while `Clock::unix_timestamp <= expires_at` and returns `MembershipExpired` after that point. Expiry blocks future checks but does not close the `Member` account or decrement `member_count`; an admin must still revoke the membership to reclaim rent and update the counter.
 
-There is no global state. Each org, role, and member account is independent. An attacker cannot block access to one org's roles by attacking another org's accounts.
+### Revocation
 
----
+`revoke_role` requires the role admin, verifies the member-role relationship, decrements `member_count` with checked arithmetic, and closes the `Member` account. A later check cannot use the closed membership.
 
-## Invariant test coverage
+### Role circuit breaker
 
-The test suite covers the following invariants:
+`set_role_enabled` requires the role admin. Disabling a role makes `check_role` fail for every member and blocks new assignments; it does not delete existing memberships. Re-enabling the role restores checks for memberships that have not expired or been revoked.
 
-- A holder with a revoked Member PDA fails check_role
-- A holder with an expired membership fails check_role
-- A disabled role fails check_role for all holders
-- A non-admin cannot assign or revoke role memberships
-- A non-admin cannot toggle a role's enabled flag
-- A non-authority cannot create roles under an org
-- Closing a Member PDA decrements the role member_count by exactly 1
-- Re-assigning the same role to the same holder fails (init constraint prevents duplicate PDAs)
+## Availability and denial of service
 
-21 integration tests pass across this suite as of the 2026-07-10 hardening pass. check_role proves PDA membership; it does not by itself prove the transaction caller controls the `holder` pubkey. Callers that need caller-identity guarantees must add their own `Signer` or validated-PDA check before trusting check_role. A documented reference consumer for that pattern is planned, not yet shipped.
+Hedwig has no application-global writable account. Write contention and authority failure are therefore scoped to an org, role, or membership rather than shared across every Hedwig user.
 
----
+This does not eliminate denial-of-service risk. An unavailable or compromised admin can prevent legitimate membership changes for its role, Solana congestion can delay transactions, and a consumer can make its own instruction unusable through incorrect account constraints or compute budgeting. Hedwig does not provide recovery or rotation instructions for an unavailable org authority or role admin in the current program.
 
-## Out of scope for the current devnet milestone
+## Fixed cardinality and immutable authorities
 
-- Spending caps on agent roles (M2+)
-- Time-locked security council with auto-expiry (M2+)
-- Cross-program role propagation hooks
-- Token-2022 non-transferable badge representation as an optional presentation layer
-- Formal verification
+The current address scheme and instruction set deliberately impose these constraints:
 
----
+- one org per authority, because the org PDA is derived from `["org", authority]`;
+- one role with a given name per org, because the role name is part of the role PDA seeds;
+- immutable org authority and role admin, because no rotation instruction exists.
+
+Supporting multiple orgs per authority or authority rotation would change the state model or instruction surface. It requires a new reviewed decision and migration plan, not a silent change to the deployed program.
+
+## Deployment and upgrade authority
+
+As checked on 2026-07-13, the devnet program was last deployed at slot `468922773` on 2026-06-12 and its upgrade authority was `8gbaJEfM5VDs9BpFLgwMTq7s2FkVpEri8ZnPbxn4HPqY`. The repository records that authority as a single deployer-controlled key. A compromise could bypass every invariant described above by deploying different code.
+
+The deployment predates the addition of `set_role_enabled`; circuit-breaker guarantees apply to the current source and tests, not to the live devnet executable until it is redeployed.
+
+Before mainnet, the upgrade authority will move to a 2-of-3 Squads multisig. Removing upgrade authority entirely is a later, evidence-gated decision: stable v1 interfaces, an external security review with all critical and high-severity findings closed, and at least one external production integration must exist first. Freezing earlier would prevent remediation of defects discovered during integration or review.
+
+## Test evidence
+
+The current 21-test LiteSVM suite covers:
+
+- rejected non-authority role creation;
+- rejected non-admin assignment, revocation, and role toggling;
+- wrong-holder and wrong-role checks;
+- past, negative, active, and non-expiring membership timestamps;
+- revoked and duplicate memberships;
+- disabled-role and re-enable behavior;
+- checked `role_count` and `member_count` lifecycle updates.
+
+The suite does not establish correctness of an external consumer, upgrade-key operations, Squads governance, or mainnet deployment. Those require separate evidence in the roadmap.
+
+## Out of scope for the current devnet program
+
+- holder authentication inside `check_role`;
+- authority or admin rotation and recovery;
+- role hierarchy, inheritance, or holder-driven delegation;
+- spending limits or transaction policy enforcement;
+- token-gated assignment and Token-2022 badges;
+- cross-program propagation hooks;
+- formal verification.
+
+These features belong in integrating or wrapper programs unless a future ADR changes the small-core boundary.
 
 ## Reporting vulnerabilities
 
-Until a formal bug bounty program is established, report vulnerabilities directly to the maintainer. Do not disclose publicly before a fix is available.
+Do not open a public issue for an undisclosed vulnerability. Use GitHub's private vulnerability-reporting flow for this repository if available; otherwise contact the maintainer through the links on the repository owner's GitHub profile and request a private channel. There is no bug bounty program at this stage.

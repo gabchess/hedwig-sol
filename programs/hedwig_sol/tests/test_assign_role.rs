@@ -1,4 +1,4 @@
-//! P1.3 (authorization) + P2.3 (expiration) invariants for assign_role.
+//! Authorization and expiration invariants for assign_role.
 
 mod common;
 

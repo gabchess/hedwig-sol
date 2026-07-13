@@ -1,6 +1,5 @@
-//! P1.3: check_role invariants (wrong holder, wrong role, expiration,
-//! revocation). "Disabled role" lives in test_set_role_enabled.rs since
-//! it's the new circuit-breaker instruction's own behavior.
+//! check_role invariants (wrong holder, wrong role, expiration,
+//! revocation). Disabled-role behavior lives in test_set_role_enabled.rs.
 
 mod common;
 

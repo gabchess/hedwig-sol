@@ -1,4 +1,4 @@
-//! P1.3: create_role authorization invariant.
+//! Authorization invariants for create_role.
 
 mod common;
 

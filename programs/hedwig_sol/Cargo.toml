@@ -1,8 +1,9 @@
 [package]
 name = "hedwig_sol"
 version = "0.1.0"
-description = "Created with Anchor"
+description = "Composable onchain roles for Solana programs"
 edition = "2021"
+license = "MIT"
 
 [lib]
 crate-type = ["cdylib", "lib"]

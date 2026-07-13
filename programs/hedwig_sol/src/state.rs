@@ -28,8 +28,8 @@ pub struct Role {
     pub org: Pubkey,
     /// Name of the role (up to 32 bytes, UTF-8).
     pub name: String,
-    /// The authority that can assign / revoke this role.
-    /// Defaults to the org authority but can be delegated.
+    /// The authority that can assign or revoke this role and toggle it.
+    /// Set to the org authority at creation; the current program cannot rotate it.
     pub admin: Pubkey,
     /// Number of active members holding this role.
     pub member_count: u64,
@@ -52,7 +52,7 @@ pub struct Member {
     pub role: Pubkey,
     /// The pubkey (wallet, program, or agent key) holding this role.
     pub holder: Pubkey,
-    /// Unix timestamp when this membership was granted. 0 = no expiry tracked.
+    /// Unix timestamp when this membership was granted.
     pub granted_at: i64,
     /// Optional expiry (Unix timestamp). 0 = no expiry.
     pub expires_at: i64,

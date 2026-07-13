@@ -1,86 +1,101 @@
 # Hedwig Architecture
 
-This document is the LLM-readable map for Hedwig's current code shape. It is meant to answer the question: "what does this repo do, and where does each decision live?"
+Hedwig is an onchain authorization primitive organized around three domain
+nouns—orgs, roles, and members—and six domain actions. The repository keeps the
+conventional Anchor shell while making the authorization model visible in file
+and symbol names.
 
-## Architecture Posture
+## Domain boundary
 
-Hedwig follows a bounded version of screaming architecture:
+Hedwig answers one question: does this pubkey currently hold this role?
 
-- The repository root keeps the standard Anchor project shape because that is how Solana reviewers, Anchor tooling, and CI expect to find a program.
-- The domain should become obvious inside `programs/hedwig_sol/src`, where the code names the authorization primitive directly: orgs, roles, members, assignments, revocation, and role checks.
-- Documentation mirrors that shape so an LLM can recover the product, security model, and folder conventions without depending on any external notes.
+| Domain term | Onchain meaning |
+|---|---|
+| `Org` | Namespace owned by one authority pubkey |
+| `Role` | Named authority under an org, controlled by its role admin |
+| `Member` | Account proving one holder pubkey belongs to one role |
+| Holder | Pubkey named by a member account; not necessarily a signer |
+| Circuit breaker | Role-wide enabled flag managed through `set_role_enabled` |
+| Role check | CPI-friendly validation through `check_role` |
 
-The intended first read path is:
+Hedwig does not define what a role authorizes inside another program. It does not
+authenticate the actor presented by that program, create delegation chains, or
+evaluate token- or vote-based eligibility. Those policies belong to the consumer
+or to wrapper programs.
 
-1. `README.md` for the product and current status.
-2. `docs/architecture.md` for code layout and domain boundaries.
-3. `docs/adr/index.md` for the decision record index.
-4. `THREAT-MODEL.md` for security posture and integration risks.
-5. `ROADMAP.md` for what remains planned.
+## Account graph
 
-## Domain Model
+```text
+authority
+  └─ Org ["org", authority]
+       └─ Role ["role", org, role_name]
+            └─ Member ["member", role, holder]
+```
 
-Hedwig's core domain is scoped onchain authorization.
+- One authority currently derives one org.
+- A role name is part of its PDA seed and cannot be renamed.
+- A role admin is initialized to the org authority. The current core has no
+  instruction to transfer that admin field.
+- A member may expire at a Unix timestamp; `0` means no expiry.
+- Revocation closes the member PDA and decrements the role's member count.
+- Disabling a role preserves members but blocks checks and new assignments.
 
-| Domain term | Code location | Meaning |
-|---|---|---|
-| Org | `programs/hedwig_sol/src/state.rs` | Top-level namespace controlled by an authority pubkey. |
-| Role | `programs/hedwig_sol/src/state.rs` | Named permission under one org, controlled by a role admin. |
-| Member | `programs/hedwig_sol/src/state.rs` | Proof that one holder pubkey currently has one role. |
-| Holder | Instruction accounts and `Member` | Any pubkey: human wallet, multisig, program-derived identity, or agent key. |
-| Circuit breaker | `set_role_enabled` | Role-wide pause that blocks new assignment and checks without revoking members. |
-| CPI check | `check_role` | The composable verification point consumed by other Solana programs. |
+Program ownership, Anchor account deserialization, PDA seed and bump checks, and
+explicit `has_one` constraints enforce relationships between these accounts.
+Discriminators identify account types; they do not establish account identity on
+their own.
 
-## Folder Boundaries
+## Instruction flow
+
+```text
+create_org
+    └─ create_role
+         ├─ assign_role ── check_role
+         ├─ revoke_role
+         └─ set_role_enabled
+```
+
+The mutating instructions authenticate the relevant authority or role admin.
+`check_role` is intentionally read-only and requires no holder signature. Its
+account constraints bind `Member.role` to the supplied role and `Member.holder`
+to the supplied holder; its handler then rejects disabled roles and elapsed
+memberships.
+
+For CPI use, the consuming program must first authenticate the actor it maps to
+`holder`. A wallet consumer can require a signer. A program identity can use its
+own PDA validation. The consumer then invokes `check_role` and propagates its
+`Result`; propagating an error aborts the consuming instruction.
+
+## Repository map
 
 | Path | Responsibility |
 |---|---|
-| `programs/hedwig_sol/src/lib.rs` | Anchor program entrypoint and public instruction surface. |
-| `programs/hedwig_sol/src/instructions/` | One file per domain action. File names should read like product verbs. |
-| `programs/hedwig_sol/src/state.rs` | Onchain account types and PDA shape. |
-| `programs/hedwig_sol/src/error.rs` | Domain errors returned by authorization and validation failures. |
-| `programs/hedwig_sol/src/constants.rs` | Shared seed and sizing constants. |
-| `programs/hedwig_sol/tests/` | LiteSVM behavior tests, named after the instruction or lifecycle they protect. |
-| `app/` | TypeScript demo/client surface. It should not redefine the Rust domain model. |
-| `docs/` | Human and LLM-facing architecture, ADR, SDK, and integration notes. |
-| `migrations/` | Anchor deployment scripts only. |
+| `programs/hedwig_sol/src/lib.rs` | Public six-instruction Anchor surface |
+| `programs/hedwig_sol/src/instructions/` | One file per authorization action |
+| `programs/hedwig_sol/src/state.rs` | `Org`, `Role`, and `Member` account state |
+| `programs/hedwig_sol/src/error.rs` | Authorization and validation errors |
+| `programs/hedwig_sol/src/constants.rs` | PDA seed and account-size constants |
+| `programs/hedwig_sol/tests/` | LiteSVM behavior and lifecycle tests |
+| `app/` | Devnet membership-lifecycle client |
+| `docs/adr/` | Durable product and architecture decisions |
+| `THREAT-MODEL.md` | Trust boundaries and security posture |
+| `ROADMAP.md` | Evidence-gated delivery sequence |
 
-## Naming Conventions
+This is screaming architecture at the scale the program needs: files and types
+name the authorization domain, while Anchor's expected root and crate layout stay
+conventional. Extra `domain`, `service`, `manager`, or `utils` layers would add
+navigation without clarifying the current six-action core.
 
-Use domain names before framework names.
+## Change rules
 
-- Instruction files use snake_case domain verbs: `create_org`, `create_role`, `assign_role`, `revoke_role`, `check_role`, `set_role_enabled`.
-- Account structs use domain nouns: `Org`, `Role`, `Member`.
-- Tests use the behavior they protect: `test_assign_role`, `test_check_role`, `test_lifecycle`.
-- Avoid generic modules such as `handlers`, `utils`, `manager`, or `service` unless they describe unavoidable infrastructure.
-- Avoid private shorthand in committed docs. The current decision must be written in the repo itself, not left as a pointer to an external reference.
+- Name new state with domain nouns and new instructions with domain verbs.
+- Keep one instruction per file while the surface remains small.
+- Put shared code in a generic module only after repeated use proves the need.
+- Keep framework and deployment concerns at the repository shell.
+- Record durable scope or architecture changes in [the ADR index](adr/index.md).
+- Keep roadmap status out of architecture documents; architecture describes the
+  current system.
 
-## Architecture notes
-
-Code architecture:
-
-- The Anchor root shape is appropriate and should remain stable.
-- The Rust program passes the screaming-architecture test at the instruction layer: each core action is named in Hedwig domain language.
-- The state layer is compact and readable: `Org`, `Role`, and `Member` are the right domain nouns.
-- A deeper domain-folder split, such as `src/domain/role` or `src/authorization`, is not worth it for a small Anchor program: it would add indirection and could make CPI generation or reviewer navigation worse.
-
-Docs and ADR consistency:
-
-- Decision bodies live in this repo, not in external notes.
-- `docs/adr/index.md` is the source-of-truth map for Hedwig-facing ADRs.
-- Future ADRs are added to `docs/adr/` with a full decision body, not only a pointer to an external reference.
-
-## Minimal Reorganization Plan
-
-Applied now:
-
-- Add `docs/architecture.md` as the LLM-readable architecture guide.
-- Add `docs/adr/index.md` as the repo-local ADR map.
-- Add `docs/migration-note.md` as a migration reference.
-- Link these docs from `README.md`.
-
-Deferred on purpose:
-
-- Do not rename `programs/hedwig_sol` to `programs/hedwig-sol`; Anchor crate/module naming and existing config expect the underscore.
-- Do not split the small instruction set into extra nested folders until the program grows past the current six-instruction core.
-- Do not mirror every external note into this repo. Mirror only decisions that affect Hedwig contributors, reviewers, auditors, or LLM agents working on this codebase.
+The governing decisions are recorded in [docs/adr/](adr/index.md). Integration
+risks, especially holder authentication and upgrade authority, belong in
+[THREAT-MODEL.md](../THREAT-MODEL.md), not in this code map.

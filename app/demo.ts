@@ -1,7 +1,7 @@
 /**
  * Devnet end-to-end lifecycle demo for the Hedwig roles primitive.
  *
- * Exercises every instruction against the live devnet deployment:
+ * Exercises the five instructions in the current live devnet deployment:
  *   create_org -> create_role -> assign_role -> check_role -> revoke_role
  *
  * Usage: see app/README.md
@@ -26,7 +26,7 @@ import {
 } from "@solana/web3.js";
 
 const PROGRAM_ID = new PublicKey(
-  "H4J9wWhraK2Zvn4o9aFheFVmAf7nfaBNPw3d7w77X1eC",
+  "H4J9wWhraK2Zvn4o9aFheFVmAf7nfaBNPw3d7w77X1eC"
 );
 
 function loadKeypair(): Keypair {
@@ -40,26 +40,26 @@ function loadKeypair(): Keypair {
 
 async function loadIdl(
   program: PublicKey,
-  provider: AnchorProvider,
+  provider: AnchorProvider
 ): Promise<Idl> {
   const localIdlPath = path.join(
     __dirname,
     "..",
     "target",
     "idl",
-    "hedwig_sol.json",
+    "hedwig_sol.json"
   );
   if (fs.existsSync(localIdlPath)) {
     console.log(`[setup] loading IDL from ${localIdlPath}`);
     return JSON.parse(fs.readFileSync(localIdlPath, "utf-8")) as Idl;
   }
   console.log(
-    "[setup] no local IDL found, fetching from chain via Program.fetchIdl",
+    "[setup] no local IDL found, fetching from chain via Program.fetchIdl"
   );
   const idl = await Program.fetchIdl(program, provider);
   if (!idl) {
     throw new Error(
-      "Could not resolve IDL: no local target/idl/hedwig_sol.json and no on-chain IDL account found.",
+      "Could not resolve IDL: no local target/idl/hedwig_sol.json and no on-chain IDL account found."
     );
   }
   return idl;
@@ -86,7 +86,7 @@ async function main() {
   console.log(`[setup] balance: ${balanceLamports / 1e9} SOL`);
   if (balanceLamports === 0) {
     throw new Error(
-      `Wallet ${payer.publicKey.toBase58()} has 0 SOL on devnet. Fund it with: solana airdrop 1 ${payer.publicKey.toBase58()} --url devnet`,
+      `Wallet ${payer.publicKey.toBase58()} has 0 SOL on devnet. Fund it with: solana airdrop 1 ${payer.publicKey.toBase58()} --url devnet`
     );
   }
 
@@ -103,15 +103,15 @@ async function main() {
 
   const [orgPda] = PublicKey.findProgramAddressSync(
     [Buffer.from("org"), payer.publicKey.toBuffer()],
-    PROGRAM_ID,
+    PROGRAM_ID
   );
   const [rolePda] = PublicKey.findProgramAddressSync(
     [Buffer.from("role"), orgPda.toBuffer(), Buffer.from(roleName)],
-    PROGRAM_ID,
+    PROGRAM_ID
   );
   const [memberPda] = PublicKey.findProgramAddressSync(
     [Buffer.from("member"), rolePda.toBuffer(), holder.publicKey.toBuffer()],
-    PROGRAM_ID,
+    PROGRAM_ID
   );
 
   // 1. create_org
@@ -149,16 +149,18 @@ async function main() {
     })
     .rpc();
   console.log(
-    `[assign_role] member=${memberPda.toBase58()} tx=${assignRoleSig}`,
+    `[assign_role] member=${memberPda.toBase58()} tx=${assignRoleSig}`
   );
 
   // 4. check_role -- read back the resulting PDAs to prove state.
   const memberAccount: any = await (program.account as any).member.fetch(
-    memberPda,
+    memberPda
   );
   const roleAccount: any = await (program.account as any).role.fetch(rolePda);
   console.log(
-    `[check_role:state] role.enabled=${roleAccount.enabled} role.memberCount=${roleAccount.memberCount.toString()} member.holder=${memberAccount.holder.toBase58()} member.expiresAt=${memberAccount.expiresAt.toString()}`,
+    `[check_role:state] role.enabled=${
+      roleAccount.enabled
+    } role.memberCount=${roleAccount.memberCount.toString()} member.holder=${memberAccount.holder.toBase58()} member.expiresAt=${memberAccount.expiresAt.toString()}`
   );
 
   const checkRoleSig = await program.methods
@@ -170,7 +172,7 @@ async function main() {
     })
     .rpc();
   console.log(
-    `[check_role] verified holder=${holder.publicKey.toBase58()} tx=${checkRoleSig}`,
+    `[check_role] verified holder=${holder.publicKey.toBase58()} tx=${checkRoleSig}`
   );
 
   // 5. revoke_role
@@ -184,13 +186,13 @@ async function main() {
     })
     .rpc();
   console.log(
-    `[revoke_role] member=${memberPda.toBase58()} tx=${revokeRoleSig}`,
+    `[revoke_role] member=${memberPda.toBase58()} tx=${revokeRoleSig}`
   );
 
   const memberClosed = await connection.getAccountInfo(memberPda);
   if (memberClosed !== null) {
     throw new Error(
-      `Expected member PDA ${memberPda.toBase58()} to be closed after revoke_role, but it still exists.`,
+      `Expected member PDA ${memberPda.toBase58()} to be closed after revoke_role, but it still exists.`
     );
   }
   console.log(`[revoke_role:state] member PDA closed, rent returned to admin`);

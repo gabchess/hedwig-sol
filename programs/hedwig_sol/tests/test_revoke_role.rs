@@ -1,4 +1,4 @@
-//! P1.3: revoke_role authorization invariant.
+//! Authorization invariants for revoke_role.
 
 mod common;
 

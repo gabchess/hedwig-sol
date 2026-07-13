@@ -4,7 +4,7 @@ use crate::{error::HedwigError, state::Role};
 
 /// Enables or disables a role.
 ///
-/// This is the circuit breaker referenced in THREAT-MODEL.md (P1.1): when a
+/// This is the circuit breaker described in THREAT-MODEL.md: when a
 /// role is disabled, `check_role` fails for every holder of that role and
 /// `assign_role` refuses new members, without requiring the admin to revoke
 /// each Member PDA individually. The role admin signs this transaction.

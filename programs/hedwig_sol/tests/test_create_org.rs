@@ -1,4 +1,4 @@
-//! P2.8: deep create_org coverage: happy path (state), bounds, and duplicates.
+//! create_org state, name-boundary, and duplicate-account coverage.
 
 mod common;
 

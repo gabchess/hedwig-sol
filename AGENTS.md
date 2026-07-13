@@ -4,7 +4,7 @@ Standing context for any AI coding agent working in this repo. Read this before 
 
 ## What Hedwig is
 
-Solana has no composable onchain primitive for "who is authorized to do what": multisig member changes need a full proposal cycle, upgrade authority is usually a single hot wallet, and autonomous agents get raw private keys instead of scoped permissions. Hedwig fixes that with a PDA-anchored account layout: `Org PDA -> Role PDA -> Member PDA`. Any program can CPI into `check_role` to verify membership (holder + role enabled + not expired) in one instruction.
+Hedwig is a composable onchain roles primitive for Solana. Its account model is `Org PDA -> Role PDA -> Member PDA`. A consuming program can authenticate an actor, then CPI into `check_role` to verify that the corresponding holder has an enabled, unexpired membership.
 
 Framing: roles as a composable onchain primitive for organizations, usable by a person, a team, or an autonomous agent. Hedwig is an original, Solana-native program. The name is locked to "Hedwig" alone.
 
@@ -24,13 +24,13 @@ Framing: roles as a composable onchain primitive for organizations, usable by a 
 - CI gate (`.github/workflows/ci.yml`): `cargo fmt --check`, `cargo build`, `cargo build-sbf`, `cargo test` on ubuntu-latest. Match it before proposing any change.
 - Tests use LiteSVM: per-instruction and lifecycle test files under `programs/hedwig_sol/tests/` (21 integration tests).
 - Project source carries zero TODO/FIXME/unimplemented markers. Keep it that way; anything unfinished goes in docs/tracker, not a code stub.
-- `app/demo.ts` is the canonical devnet e2e reference for the full role lifecycle.
+- `app/demo.ts` records the five-instruction devnet membership lifecycle. The live program was last deployed at slot `468922773` on 2026-06-12; it predates `set_role_enabled`, so a redeploy is required for the sixth instruction.
 
 ## What NOT to touch without explicit sign-off
 
 - The devnet program ID: treat as a fixed identity for this milestone.
-- The single-deployer-key upgrade authority: a **named, tracked risk** in `THREAT-MODEL.md` (M1 target: 2-of-3 Squads multisig), not an oversight to silently "fix."
-- `docs/sdk-rfc.md`: locked design doc, already PR-reviewed. Propose changes as a new PR, don't edit in place.
+- The single-deployer-key upgrade authority: a **named, tracked risk** in `THREAT-MODEL.md`; the roadmap requires a 2-of-3 Squads multisig before mainnet. Do not change it silently.
+- `docs/sdk-rfc.md`: locked historical design doc. Do not edit it in place; `docs/adr/0003-adoption-led-interfaces.md` records the active decisions that supersede parts of it.
 - Naming/branding: "Hedwig" only.
 
 ## Goal-contract discipline

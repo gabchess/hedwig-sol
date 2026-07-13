@@ -9,7 +9,8 @@ use crate::{
 /// Creates a new organization PDA.
 ///
 /// The org is the top-level namespace for a set of roles. The signer becomes
-/// the org authority and is the only one who can create roles or reassign authority.
+/// the org authority and is the only one who can create roles. The current
+/// instruction set does not support authority rotation.
 ///
 /// PDA seeds: [ORG_SEED, authority] -- one org per authority is intentional
 /// (a deliberate cardinality decision, not an oversight).
