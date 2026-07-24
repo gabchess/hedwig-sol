@@ -3,7 +3,7 @@
 mod common;
 
 use common::*;
-use hedwig_sol::error::HedwigError;
+use hedwig_sol::{error::HedwigError, Role};
 
 #[test]
 fn test_assign_role_rejects_non_admin() {
@@ -21,6 +21,8 @@ fn test_assign_role_rejects_non_admin() {
     );
 
     assert_hedwig_error(result, HedwigError::NotRoleAdmin);
+    assert!(svm.get_account(&member).is_none());
+    assert_eq!(account_data::<Role>(&svm, &role).member_count, 0);
 }
 
 #[test]
@@ -35,10 +37,10 @@ fn test_assign_role_rejects_duplicate() {
         ix_assign_role(member, role, holder, admin.pubkey(), 0),
     );
 
-    assert!(
-        result.is_err(),
-        "re-assigning the same holder+role should fail (duplicate Member PDA)"
-    );
+    assert_account_already_in_use(result);
+
+    let role_state = account_data::<Role>(&svm, &role);
+    assert_eq!(role_state.member_count, 1);
 }
 
 #[test]
@@ -55,10 +57,8 @@ fn test_assign_role_expires_at_zero_accepted() {
         ix_assign_role(member, role, holder, admin.pubkey(), 0),
     );
 
-    assert!(
-        result.is_ok(),
-        "expires_at = 0 (never-expires) should be accepted: {result:?}"
-    );
+    result.expect("expires_at = 0 (never-expires) should be accepted");
+    assert_eq!(account_data::<Role>(&svm, &role).member_count, 1);
 }
 
 #[test]
@@ -76,10 +76,29 @@ fn test_assign_role_expires_at_future_accepted() {
         ix_assign_role(member, role, holder, admin.pubkey(), future),
     );
 
-    assert!(
-        result.is_ok(),
-        "future expires_at should be accepted: {result:?}"
+    result.expect("future expires_at should be accepted");
+    assert_eq!(account_data::<Role>(&svm, &role).member_count, 1);
+}
+
+#[test]
+fn test_assign_role_expires_at_exact_now_rejected() {
+    let mut svm = new_svm();
+    let (_org, admin, role) = setup_role(&mut svm, "Acme", "admin");
+    let holder = funded_keypair(&mut svm).pubkey();
+    let (member, _bump) = member_pda(&role, &holder);
+    warp_unix_timestamp(&mut svm, 1_000_000);
+    let now = current_unix_timestamp(&svm);
+
+    let result = send(
+        &mut svm,
+        &admin,
+        &[],
+        ix_assign_role(member, role, holder, admin.pubkey(), now),
     );
+
+    assert_hedwig_error(result, HedwigError::InvalidExpiration);
+    assert!(svm.get_account(&member).is_none());
+    assert_eq!(account_data::<Role>(&svm, &role).member_count, 0);
 }
 
 #[test]
@@ -98,6 +117,8 @@ fn test_assign_role_expires_at_past_rejected() {
     );
 
     assert_hedwig_error(result, HedwigError::InvalidExpiration);
+    assert!(svm.get_account(&member).is_none());
+    assert_eq!(account_data::<Role>(&svm, &role).member_count, 0);
 }
 
 #[test]
@@ -115,4 +136,6 @@ fn test_assign_role_expires_at_negative_rejected() {
     );
 
     assert_hedwig_error(result, HedwigError::InvalidExpiration);
+    assert!(svm.get_account(&member).is_none());
+    assert_eq!(account_data::<Role>(&svm, &role).member_count, 0);
 }

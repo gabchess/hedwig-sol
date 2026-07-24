@@ -1,33 +1,29 @@
 /**
  * Devnet end-to-end lifecycle demo for the Hedwig roles primitive.
  *
- * Exercises the five instructions in the current live devnet deployment:
- *   create_org -> create_role -> assign_role -> check_role -> revoke_role
+ * Exercises all six Hedwig instructions through @hedwig-sol/sdk:
+ *   create_org -> create_role -> assign_role -> check_role ->
+ *   set_role_enabled(false) -> revoke_role
  *
  * Usage: see app/README.md
  */
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+import { AnchorProvider, Wallet } from "@anchor-lang/core";
 import {
-  AnchorProvider,
-  BN,
-  Program,
-  setProvider,
-  Wallet,
-  type Idl,
-} from "@coral-xyz/anchor";
-import {
-  Connection,
-  Keypair,
-  PublicKey,
-  SystemProgram,
-  clusterApiUrl,
-} from "@solana/web3.js";
-
-const PROGRAM_ID = new PublicKey(
-  "H4J9wWhraK2Zvn4o9aFheFVmAf7nfaBNPw3d7w77X1eC"
-);
+  createHedwigProgram,
+  deriveMemberPda,
+  deriveOrgPda,
+  deriveRolePda,
+  sendAssignRole,
+  sendCheckRole,
+  sendCreateOrg,
+  sendCreateRole,
+  sendRevokeRole,
+  sendSetRoleEnabled,
+} from "@hedwig-sol/sdk";
+import { Connection, Keypair, clusterApiUrl } from "@solana/web3.js";
 
 function loadKeypair(): Keypair {
   const walletPath =
@@ -36,33 +32,6 @@ function loadKeypair(): Keypair {
   const raw = fs.readFileSync(walletPath, "utf-8");
   const secret = Uint8Array.from(JSON.parse(raw));
   return Keypair.fromSecretKey(secret);
-}
-
-async function loadIdl(
-  program: PublicKey,
-  provider: AnchorProvider
-): Promise<Idl> {
-  const localIdlPath = path.join(
-    __dirname,
-    "..",
-    "target",
-    "idl",
-    "hedwig_sol.json"
-  );
-  if (fs.existsSync(localIdlPath)) {
-    console.log(`[setup] loading IDL from ${localIdlPath}`);
-    return JSON.parse(fs.readFileSync(localIdlPath, "utf-8")) as Idl;
-  }
-  console.log(
-    "[setup] no local IDL found, fetching from chain via Program.fetchIdl"
-  );
-  const idl = await Program.fetchIdl(program, provider);
-  if (!idl) {
-    throw new Error(
-      "Could not resolve IDL: no local target/idl/hedwig_sol.json and no on-chain IDL account found."
-    );
-  }
-  return idl;
 }
 
 function randomOrgName(): string {
@@ -79,7 +48,6 @@ async function main() {
   const provider = new AnchorProvider(connection, wallet, {
     commitment: "confirmed",
   });
-  setProvider(provider);
 
   console.log(`[setup] wallet: ${payer.publicKey.toBase58()}`);
   const balanceLamports = await connection.getBalance(payer.publicKey);
@@ -90,8 +58,7 @@ async function main() {
     );
   }
 
-  const idl = await loadIdl(PROGRAM_ID, provider);
-  const program = new Program(idl, provider);
+  const program = createHedwigProgram(provider);
 
   const orgName = randomOrgName();
   const roleName = "treasurer";
@@ -101,90 +68,101 @@ async function main() {
   console.log(`[setup] role name: ${roleName}`);
   console.log(`[setup] holder: ${holder.publicKey.toBase58()}`);
 
-  const [orgPda] = PublicKey.findProgramAddressSync(
-    [Buffer.from("org"), payer.publicKey.toBuffer()],
-    PROGRAM_ID
-  );
-  const [rolePda] = PublicKey.findProgramAddressSync(
-    [Buffer.from("role"), orgPda.toBuffer(), Buffer.from(roleName)],
-    PROGRAM_ID
-  );
-  const [memberPda] = PublicKey.findProgramAddressSync(
-    [Buffer.from("member"), rolePda.toBuffer(), holder.publicKey.toBuffer()],
-    PROGRAM_ID
-  );
+  const [orgPda] = deriveOrgPda(payer.publicKey);
+  const [rolePda] = deriveRolePda(orgPda, roleName);
+  const [memberPda] = deriveMemberPda(rolePda, holder.publicKey);
 
   // 1. create_org
-  const createOrgSig = await program.methods
-    .createOrg(orgName)
-    .accounts({
-      org: orgPda,
+  const createOrgSig = await sendCreateOrg(
+    provider,
+    {
       authority: payer.publicKey,
-      systemProgram: SystemProgram.programId,
-    })
-    .rpc();
+      name: orgName,
+    },
+    { signers: [] }
+  );
   console.log(`[create_org] org=${orgPda.toBase58()} tx=${createOrgSig}`);
 
   // 2. create_role
-  const createRoleSig = await program.methods
-    .createRole(roleName)
-    .accounts({
-      role: rolePda,
+  const createRoleSig = await sendCreateRole(
+    provider,
+    {
       org: orgPda,
       authority: payer.publicKey,
-      systemProgram: SystemProgram.programId,
-    })
-    .rpc();
+      name: roleName,
+    },
+    { signers: [] }
+  );
   console.log(`[create_role] role=${rolePda.toBase58()} tx=${createRoleSig}`);
 
-  // 3. assign_role (no expiry: pass 0)
-  const assignRoleSig = await program.methods
-    .assignRole(new BN(0))
-    .accounts({
-      member: memberPda,
+  // 3. assign_role (no expiry)
+  const assignRoleSig = await sendAssignRole(
+    provider,
+    {
       role: rolePda,
       holder: holder.publicKey,
       admin: payer.publicKey,
-      systemProgram: SystemProgram.programId,
-    })
-    .rpc();
+      expiresAt: null,
+    },
+    { signers: [] }
+  );
   console.log(
     `[assign_role] member=${memberPda.toBase58()} tx=${assignRoleSig}`
   );
 
   // 4. check_role -- read back the resulting PDAs to prove state.
-  const memberAccount: any = await (program.account as any).member.fetch(
-    memberPda
-  );
-  const roleAccount: any = await (program.account as any).role.fetch(rolePda);
+  const memberAccount = await program.account.member.fetch(memberPda);
+  const roleAccount = await program.account.role.fetch(rolePda);
   console.log(
     `[check_role:state] role.enabled=${
       roleAccount.enabled
     } role.memberCount=${roleAccount.memberCount.toString()} member.holder=${memberAccount.holder.toBase58()} member.expiresAt=${memberAccount.expiresAt.toString()}`
   );
 
-  const checkRoleSig = await program.methods
-    .checkRole()
-    .accounts({
-      member: memberPda,
+  const checkRoleSig = await sendCheckRole(
+    provider,
+    {
       role: rolePda,
       holder: holder.publicKey,
-    })
-    .rpc();
+    },
+    { signers: [] }
+  );
   console.log(
     `[check_role] verified holder=${holder.publicKey.toBase58()} tx=${checkRoleSig}`
   );
 
-  // 5. revoke_role
-  const revokeRoleSig = await program.methods
-    .revokeRole()
-    .accounts({
-      member: memberPda,
+  // 5. set_role_enabled(false)
+  const setRoleEnabledSig = await sendSetRoleEnabled(
+    provider,
+    {
       role: rolePda,
       admin: payer.publicKey,
-      systemProgram: SystemProgram.programId,
-    })
-    .rpc();
+      enabled: false,
+    },
+    { signers: [] }
+  );
+  console.log(
+    `[set_role_enabled] role=${rolePda.toBase58()} enabled=false tx=${setRoleEnabledSig}`
+  );
+
+  const disabledRoleAccount = await program.account.role.fetch(rolePda);
+  if (disabledRoleAccount.enabled) {
+    throw new Error(
+      `Expected role ${rolePda.toBase58()} to be disabled after set_role_enabled.`
+    );
+  }
+  console.log(`[set_role_enabled:state] role.enabled=false`);
+
+  // 6. revoke_role
+  const revokeRoleSig = await sendRevokeRole(
+    provider,
+    {
+      role: rolePda,
+      holder: holder.publicKey,
+      admin: payer.publicKey,
+    },
+    { signers: [] }
+  );
   console.log(
     `[revoke_role] member=${memberPda.toBase58()} tx=${revokeRoleSig}`
   );
@@ -197,7 +175,7 @@ async function main() {
   }
   console.log(`[revoke_role:state] member PDA closed, rent returned to admin`);
 
-  console.log("full lifecycle OK on devnet");
+  console.log("six-instruction lifecycle OK on devnet");
 }
 
 main().catch((err) => {

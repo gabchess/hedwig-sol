@@ -4,10 +4,14 @@
   "private": true,
   "description": "Devnet e2e lifecycle demo for the Hedwig roles primitive",
   "scripts": {
-    "demo": "tsx demo.ts"
+    "predemo": "npm --prefix .. run sdk:build",
+    "demo": "tsx demo.ts",
+    "preconsumer-demo": "npm --prefix .. run sdk:build",
+    "consumer-demo": "tsx consumer-demo.ts"
   },
   "dependencies": {
-    "@coral-xyz/anchor": "^0.32.1",
+    "@anchor-lang/core": "1.0.2",
+    "@hedwig-sol/sdk": "file:../sdk",
     "@solana/web3.js": "^1.98.4"
   },
   "devDependencies": {

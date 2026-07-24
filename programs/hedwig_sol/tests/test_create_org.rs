@@ -48,10 +48,7 @@ fn test_create_org_accepts_64_byte_name() {
         &[],
         ix_create_org(org, authority.pubkey(), &name),
     );
-    assert!(
-        result.is_ok(),
-        "64-byte name should be accepted: {result:?}"
-    );
+    result.expect("64-byte name should be accepted");
 
     let state = account_data::<Org>(&svm, &org);
     assert_eq!(state.name.len(), 64);
@@ -88,5 +85,9 @@ fn test_create_org_rejects_duplicate() {
         ix_create_org(org, authority.pubkey(), "Acme Again"),
     );
 
-    assert!(result.is_err(), "duplicate create_org should fail");
+    assert_account_already_in_use(result);
+
+    let state = account_data::<Org>(&svm, &org);
+    assert_eq!(state.name, "Acme");
+    assert_eq!(state.role_count, 0);
 }

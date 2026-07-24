@@ -5,6 +5,7 @@
 #![allow(dead_code)]
 
 use anchor_lang::{
+    error::ErrorCode,
     prelude::{Clock, Pubkey},
     solana_program::{instruction::Instruction, system_program},
     AccountDeserialize, InstructionData, ToAccountMetas,
@@ -91,7 +92,9 @@ pub fn send(
     signers.push(payer);
     signers.extend_from_slice(extra_signers);
     let tx = VersionedTransaction::try_new(VersionedMessage::Legacy(msg), &signers).unwrap();
-    svm.send_transaction(tx)
+    let result = svm.send_transaction(tx);
+    svm.expire_blockhash();
+    result
 }
 
 /// Asserts the transaction failed with the given HedwigError's custom
@@ -109,6 +112,29 @@ pub fn assert_hedwig_error(result: TransactionResult, expected: HedwigError) {
         }
         other => panic!("expected a custom program error, got {other:?}"),
     }
+}
+
+/// Asserts a transaction reached its instruction and failed with an exact
+/// runtime instruction error.
+pub fn assert_instruction_error(result: TransactionResult, expected: InstructionError) {
+    let failed = result.expect_err("expected transaction to fail");
+    match failed.err {
+        TransactionError::InstructionError(_, actual) => {
+            assert_eq!(actual, expected, "unexpected instruction error");
+        }
+        other => panic!("expected an instruction error, got {other:?}"),
+    }
+}
+
+/// Asserts an exact built-in Anchor validation error.
+pub fn assert_anchor_constraint_error(result: TransactionResult, expected: ErrorCode) {
+    assert_instruction_error(result, InstructionError::Custom(expected as u32));
+}
+
+/// Anchor `init` reaches System Program allocation for an existing PDA, which
+/// returns SystemError::AccountAlreadyInUse (custom code 0).
+pub fn assert_account_already_in_use(result: TransactionResult) {
+    assert_instruction_error(result, InstructionError::Custom(0));
 }
 
 // --- instruction builders ---

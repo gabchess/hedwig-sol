@@ -3,6 +3,7 @@
 
 mod common;
 
+use anchor_lang::error::ErrorCode;
 use common::*;
 use hedwig_sol::error::HedwigError;
 
@@ -41,9 +42,10 @@ fn test_check_role_rejects_wrong_holder() {
         ix_check_role(member_a, role, holder_b),
     );
 
-    assert!(
-        result.is_err(),
-        "check_role should reject a Member PDA that doesn't belong to the claimed holder"
+    assert_anchor_constraint_error(result, ErrorCode::ConstraintSeeds);
+    assert_eq!(
+        account_data::<hedwig_sol::Role>(&svm, &role).member_count,
+        2
     );
 }
 
@@ -89,14 +91,19 @@ fn test_check_role_rejects_wrong_role() {
         ix_check_role(member_a, role_b, holder),
     );
 
-    assert!(
-        result.is_err(),
-        "check_role should reject a Member PDA that belongs to a different role"
+    assert_anchor_constraint_error(result, ErrorCode::ConstraintSeeds);
+    assert_eq!(
+        account_data::<hedwig_sol::Role>(&svm, &role_a).member_count,
+        1
+    );
+    assert_eq!(
+        account_data::<hedwig_sol::Role>(&svm, &role_b).member_count,
+        0
     );
 }
 
 #[test]
-fn test_check_role_rejects_expired_membership() {
+fn test_check_role_expiry_boundary() {
     let mut svm = new_svm();
     let (_org, admin, role) = setup_role(&mut svm, "Acme", "admin");
     let holder = funded_keypair(&mut svm).pubkey();
@@ -111,13 +118,25 @@ fn test_check_role_rejects_expired_membership() {
     )
     .expect("assign_role with a near-future expiry should succeed");
 
-    // Warp the clock past the membership's expiry.
-    warp_unix_timestamp(&mut svm, assign_expiry + 100);
-
     let caller = funded_keypair(&mut svm);
-    let result = send(&mut svm, &caller, &[], ix_check_role(member, role, holder));
 
-    assert_hedwig_error(result, HedwigError::MembershipExpired);
+    warp_unix_timestamp(&mut svm, assign_expiry - 1);
+    send(&mut svm, &caller, &[], ix_check_role(member, role, holder))
+        .expect("membership should be valid immediately before expiry");
+
+    warp_unix_timestamp(&mut svm, assign_expiry);
+    send(&mut svm, &caller, &[], ix_check_role(member, role, holder))
+        .expect("membership should be valid exactly at expiry");
+
+    warp_unix_timestamp(&mut svm, assign_expiry + 1);
+    let expired = send(&mut svm, &caller, &[], ix_check_role(member, role, holder));
+    assert_hedwig_error(expired, HedwigError::MembershipExpired);
+
+    assert_eq!(
+        account_data::<hedwig_sol::Role>(&svm, &role).member_count,
+        1
+    );
+    assert!(svm.get_account(&member).is_some());
 }
 
 #[test]
@@ -136,8 +155,10 @@ fn test_check_role_rejects_revoked_membership() {
     let caller = funded_keypair(&mut svm);
     let result = send(&mut svm, &caller, &[], ix_check_role(member, role, holder));
 
-    assert!(
-        result.is_err(),
-        "check_role should reject a revoked (closed) Member PDA"
+    assert_anchor_constraint_error(result, ErrorCode::AccountNotInitialized);
+    assert!(svm.get_account(&member).is_none());
+    assert_eq!(
+        account_data::<hedwig_sol::Role>(&svm, &role).member_count,
+        0
     );
 }

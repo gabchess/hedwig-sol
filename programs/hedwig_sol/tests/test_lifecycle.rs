@@ -80,12 +80,13 @@ fn test_full_lifecycle() {
     // 4. check_role
     let caller = funded_keypair(&mut svm);
     let check = send(&mut svm, &caller, &[], ix_check_role(member, role, holder));
-    assert!(
-        check.is_ok(),
-        "check_role should pass for an active membership: {check:?}"
-    );
+    check.expect("check_role should pass for an active membership");
 
     // 5. revoke_role
+    let admin_lamports_before_revoke = svm
+        .get_account(&authority.pubkey())
+        .expect("authority should exist")
+        .lamports;
     send(
         &mut svm,
         &authority,
@@ -99,15 +100,39 @@ fn test_full_lifecycle() {
         role_state.member_count, 0,
         "member_count should decrement exactly once"
     );
+    let admin_lamports_after_revoke = svm
+        .get_account(&authority.pubkey())
+        .expect("authority should exist")
+        .lamports;
+    assert!(
+        admin_lamports_after_revoke > admin_lamports_before_revoke,
+        "returned member rent should exceed the revoke transaction fee"
+    );
 
-    // Member PDA must be closed: either pruned entirely, or no longer
-    // owned by the program (Anchor's `close =` reassigns ownership).
+    // LiteSVM normally prunes the zero-lamport account. If it retains it,
+    // assert the exact closed-account shape.
     match svm.get_account(&member) {
         None => {}
-        Some(account) => assert_ne!(
-            account.owner,
-            hedwig_sol::id(),
-            "closed Member PDA should no longer be owned by the program"
-        ),
+        Some(account) => {
+            assert_eq!(account.lamports, 0);
+            assert_eq!(account.owner, anchor_lang::system_program::ID);
+            assert!(!account.executable);
+            assert!(account.data.iter().all(|byte| *byte == 0));
+        }
     }
+
+    // 6. Re-granting the same holder reuses the closed PDA and restores count.
+    send(
+        &mut svm,
+        &authority,
+        &[],
+        ix_assign_role(member, role, holder, authority.pubkey(), 0),
+    )
+    .expect("re-grant after close should succeed");
+
+    let member_state = account_data::<Member>(&svm, &member);
+    assert_eq!(member_state.role, role);
+    assert_eq!(member_state.holder, holder);
+    assert_eq!(member_state.expires_at, 0);
+    assert_eq!(account_data::<Role>(&svm, &role).member_count, 1);
 }

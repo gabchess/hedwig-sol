@@ -19,4 +19,9 @@ fn test_revoke_role_rejects_non_admin() {
     );
 
     assert_hedwig_error(result, HedwigError::NotRoleAdmin);
+    assert!(svm.get_account(&member).is_some());
+    assert_eq!(
+        account_data::<hedwig_sol::Role>(&svm, &role).member_count,
+        1
+    );
 }

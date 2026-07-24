@@ -21,11 +21,11 @@ use crate::{
 /// ```ignore
 /// hedwig_sol::cpi::check_role(
 ///     CpiContext::new(
-///         ctx.accounts.hedwig_program.to_account_info(),
+///         ctx.accounts.hedwig_program.key(),
 ///         hedwig_sol::cpi::accounts::CheckRole {
 ///             member: ctx.accounts.member.to_account_info(),
 ///             role: ctx.accounts.role.to_account_info(),
-///             holder: ctx.accounts.holder.to_account_info(),
+///             holder: ctx.accounts.actor.to_account_info(),
 ///         },
 ///     ),
 /// )?;
@@ -58,7 +58,8 @@ pub struct CheckRole<'info> {
 
     pub role: Account<'info, Role>,
 
-    /// CHECK: The holder whose membership is being verified. No signature
-    /// required; the check is read-only.
+    /// CHECK: Member seeds and `has_one = holder` bind this pubkey to the
+    /// membership being checked. No signature is required because this
+    /// instruction verifies membership, not control of the holder key.
     pub holder: UncheckedAccount<'info>,
 }
