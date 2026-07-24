@@ -4,22 +4,34 @@ Hedwig is a small Solana-native roles primitive. Keep changes narrow, auditable,
 
 ## Local checks
 
-Run the same checks CI expects before opening a PR:
+Run the full local release checks before opening a PR:
 
 ```bash
 cargo fmt --check
 cargo build
 cargo build-sbf --manifest-path programs/hedwig_sol/Cargo.toml
-cargo test
+cargo build-sbf --manifest-path programs/hedwig_consumer/Cargo.toml
+cargo test --workspace
+yarn sdk:typecheck
+yarn sdk:test
+yarn sdk:build
+./node_modules/.bin/tsc -p app/tsconfig.json --noEmit
 ```
 
-The test suite uses LiteSVM and does not require a network connection.
+The tests use LiteSVM and do not require a network connection. Build both SBF
+artifacts before the workspace tests because the fixtures load them at compile
+time. CI enforces the Rust, SBF, and app dependency-audit gates. The SDK and app
+TypeScript checks remain required local gates until the repository's Yarn
+install policy is resolved.
 
 ## Repo map
 
 - Program source: `programs/hedwig_sol/src/`
 - Program tests: `programs/hedwig_sol/tests/`
-- Devnet demo: `app/demo.ts`
+- Secure consumer and tests: `programs/hedwig_consumer/`
+- Private TypeScript SDK alpha: `sdk/`
+- SDK-driven devnet demo: `app/demo.ts`
+- Integration guide: `docs/integration-guide.md`
 - Architecture map: `docs/architecture.md`
 - Active decisions: `docs/adr/index.md`
 - Threat model and known risks: `THREAT-MODEL.md`

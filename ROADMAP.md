@@ -1,83 +1,175 @@
 # Hedwig roadmap
 
-Hedwig's delivery order follows adoption evidence: secure the integration boundary, make it easy to use, validate it with independent teams, harden governance, then deploy to mainnet. The six-instruction onchain core stays small unless real integrations demonstrate a missing primitive.
+Hedwig advances through proof, not feature count. The delivery order is:
+secure the integration boundary, make the six-instruction core easy to use,
+observe independent use, harden governance, then consider mainnet.
 
-## Current baseline: devnet core shipped
+## Grant context
 
-The following work is implemented in the public repository:
+- Total grant: USDG 3,000.
+- Received: USDG 1,500.
+- Remaining: USDG 1,500.
+- No written portal milestone or second-tranche checklist has been provided.
 
-- six Anchor instructions: `create_org`, `create_role`, `assign_role`, `revoke_role`, `check_role`, and `set_role_enabled`;
-- devnet program `H4J9wWhraK2Zvn4o9aFheFVmAf7nfaBNPw3d7w77X1eC`, whose current deployment contains the first five instructions;
-- a five-instruction membership-lifecycle demo in `app/demo.ts`;
-- 21 LiteSVM integration tests covering lifecycle, authorization failures, expiry, revocation, duplicate assignment, checked counters, and the role circuit breaker;
-- a documented threat model and repository-local architecture decisions.
+The working rule is therefore to keep shipping verifiable roadmap progress.
+Grant amounts are funding facts, not evidence that a milestone or adoption
+claim has been accepted.
 
-The TypeScript SDK, secure reference consumer, design-partner integrations, Squads governance, external security review, and mainnet deployment are not shipped yet.
+## Current release slice
 
-The live program was last deployed at slot `468922773` on 2026-06-12. A devnet redeploy is required before `set_role_enabled` is available to consumers.
+### Six-instruction core
 
-## Grant milestone 1: safe integration and usable tooling
+The source implements:
 
-### 1. Secure CPI reference consumer
+1. `create_org`
+2. `create_role`
+3. `assign_role`
+4. `check_role`
+5. `set_role_enabled`
+6. `revoke_role`
 
-Ship a minimal consumer program that calls `check_role` only after authenticating the supplied holder. Cover a wallet signer and a consumer-owned PDA, and document why a bare membership check is insufficient.
+The local core suite contains 28 LiteSVM integration tests plus its generated
+program ID test. The current devnet program at
+`H4J9wWhraK2Zvn4o9aFheFVmAf7nfaBNPw3d7w77X1eC` contains the reviewed
+six-instruction artifact deployed at slot `478655638`.
 
-**Done when:** the six-instruction program is redeployed to devnet, both authorization patterns have passing integration tests, the unsafe unbound-holder case is rejected by a test, and the example can be built from a clean checkout.
+### Secure CPI reference consumer
 
-### 2. TypeScript SDK alpha
+The repository now contains `programs/hedwig_consumer`, a minimal program that
+requires an authenticated signer, binds its counter PDA and stored authority to
+that signer, and passes the same account to Hedwig as the holder. Its 12
+LiteSVM integration tests cover the successful path and the main authorization,
+account, lifecycle, program-substitution, and overflow failures.
 
-Publish a thin `@hedwig-sol/sdk` package with typed PDA derivation, account reads, and instruction builders for the existing six-instruction program. Rewrite the devnet lifecycle demo to import the package instead of duplicating raw Anchor setup.
+**State:** shipped on devnet at
+`52D3pTYvMwLYbiigY5xg55n4HmtEzTKCEicx1Cojzo9a`. The reviewed 176,264-byte
+artifact was deployed at slot `478667066`; the live dump matches it byte for
+byte. A fresh authenticated actor then created a Hedwig role and membership,
+initialized a consumer-owned counter, and incremented it from zero to one
+through `check_role` CPI.
 
-**Done when:** `npm view @hedwig-sol/sdk version` returns the alpha release, its package includes type declarations, a clean install passes the package test suite, and the repository demo imports the published API.
+This proves the live integration path. The consumer is maintained by the Hedwig
+builder and does not count as independent use.
 
-### 3. Three devnet design partners
+### TypeScript SDK alpha
 
-Onboard three independent Solana teams. Each partner must create an org and a live role tree on devnet and record integration feedback in a public issue or linked public integration artifact.
+The private repository-local `@hedwig-sol/sdk` alpha contains typed PDA helpers,
+argument validation, generated IDL types, and build/send pairs for all six
+instructions. The demo imports this package instead of rebuilding raw Anchor
+calls. Its suite contains 27 tests.
 
-**Done when:** three partner records identify the organization, devnet accounts or transactions, integration use case, and resulting feedback. Builder-owned fixtures and demos do not count toward the three.
+**State:** built and tested locally as `0.1.0-alpha.0`. It is not published to
+npm.
 
-## Grant milestone 2: governed integration and mainnet readiness
+### Audit and devnet promotion
 
-### 4. Multisig upgrade authority
+The release gate covered the core, consumer, SDK, demo, CI, docs, and deployment
+process at one commit. The 2026-07-24 promotion proved:
 
-Transfer the devnet program upgrade authority from the deployer key to a 2-of-3 Squads multisig and document the upgrade procedure.
+- no unresolved Critical or High code finding that applies to devnet;
+- all 949 audit checks classified with zero pending rows;
+- the consumer built first and Hedwig built last;
+- the deployment command pinned to the fixed program ID;
+- the compiled ELF matched every deployed code byte, with only zero-filled
+  loader allocation padding after it; and
+- the exact six-instruction live lifecycle completed, including the disabled
+  Role state and closed Member account.
 
-**Done when:** `solana program show H4J9wWhraK2Zvn4o9aFheFVmAf7nfaBNPw3d7w77X1eC --url devnet` reports the Squads-controlled authority and a successful governed upgrade rehearsal is recorded.
+The single-key upgrade authority remains a named mainnet blocker. It does not
+invalidate the completed devnet-only upgrade. See the
+[audit](docs/audits/2026-07-24-full-audit.md) and
+[core promotion record](docs/audits/2026-07-24-devnet-promotion.md). The
+[consumer promotion record](docs/audits/2026-07-24-consumer-devnet-integration.md)
+contains its deployment and CPI transaction evidence.
 
-### 5. Production integration example
+The [grant progress ledger](docs/grant-progress.md) maps shipped work to public
+artifacts. It is the public claim record for the remaining USDG 1,500; the
+roadmap remains the decision record.
 
-Ship a working Squads-compatible proposal guard or, if implementation evidence shows Realms is more tractable, a Realms integration that gates an action through Hedwig. The example must authenticate its actor before checking the role.
+## Next evidence gate: one independent integration experiment
 
-**Done when:** the integration has a passing end-to-end test, a reproducible devnet transaction, and setup documentation that a reviewer can follow from a clean checkout.
+The next product question is whether another Solana team can use Hedwig to gate
+a real state-changing action without builder help hiding integration problems.
+Subject to separate outreach approval, run one concierge devnet integration and
+record:
 
-### 6. External review and hosted documentation
+- the team's existing authorization behavior;
+- time to the first successful role check;
+- holder-authentication mistakes and repeated account choreography;
+- whether the team keeps the integration after the test; and
+- whether package distribution, a Rust CPI helper, or another missing surface
+  blocked them.
 
-Commission an independent security review of the stable candidate and publish its scope, commit hash, findings, and remediation status. Publish hosted documentation that mirrors the repository's canonical docs for the role model, SDK, integration example, and security boundary.
+This experiment is evidence, not a partner claim by default. The repository
+currently has no verified design partner, customer, revenue, or production use.
 
-**Done when:** the review report is public, the reviewed commit is identifiable, every critical and high-severity finding is independently verified closed, any accepted lower-severity risk has a published rationale, and the hosted documentation URL resolves.
+## Later gates
 
-### 7. Mainnet deployment
+### Independent design partners
 
-Deploy the reviewed candidate to Solana mainnet with multisig upgrade authority and publish the program ID, reproducible build information, and supported SDK version.
+Expand from the first experiment only if the signal is useful. Three independent
+teams must publish or link reproducible devnet integration evidence. Builder
+fixtures and the reference consumer do not count.
 
-**Done when:** the mainnet program account is independently queryable, its upgrade authority is the documented multisig, the tagged source matches the deployed release process, and one external production integration uses it.
+### Agent runtime egress hardening
 
-## Post-grant gate: consider freezing v1
+Pilot [Hermes Agent's IronProxy](https://hermes-agent.nousresearch.com/docs/user-guide/egress/iron-proxy)
+for one Docker-sandboxed Hedwig/Estaleiro workflow after the first independent
+integration experiment. This belongs to the offchain agent runtime, not the
+Hedwig program or authorization model. Its
+[implementation notes](https://hermes-agent.nousresearch.com/docs/developer-guide/egress-internals)
+define the security-sensitive lifecycle and current backend limits.
 
-Immutability is an outcome of stability and adoption, not a launch shortcut. Remove upgrade authority only when all of the following are true:
+The pilot must:
 
-- the v1 account and instruction interfaces are tagged stable;
-- an external security review is complete and all critical and high-severity findings are closed;
-- at least one external production integration has operated on mainnet long enough to surface integration defects;
-- maintainers publish a freeze proposal, migration implications, and verification steps before execution.
+- use one supported provider and a host allowlist;
+- expose only proxy tokens inside the container, not the real provider secret;
+- deny private, link-local, and metadata-service destinations;
+- fail closed if the proxy, CA, mapping, or audit stream is unavailable;
+- preserve a request log without secret values; and
+- document bypass limits, including raw sockets, host compromise, allowlisted
+  exfiltration, and unsupported signature-based credentials.
 
-**Done when:** the published gate evidence is complete and `solana program show <MAINNET_PROGRAM_ID>` reports no upgrade authority. Until then, governance remains with the documented multisig.
+Adopt it only if the Docker proof passes and the operational burden is
+acceptable. Hermes currently wires IronProxy to Docker, not every terminal
+backend. This work hardens builder credentials; it is not evidence of Hedwig
+adoption and does not block the next devnet partner test.
 
-## Evidence-gated interface decisions
+### Governed upgrade authority
 
-- The core remains flat: orgs contain roles, and roles contain memberships. Hierarchy, eligibility, spending policy, and holder-driven delegation belong in consumers or wrapper programs.
-- A standalone `hedwig-cpi` Rust crate is deferred. Build it only if at least two independent integrations report the same repeated CPI or account-validation friction and the crate removes that duplication without expanding the onchain program.
-- An in-house agent demo may test a use case, but it does not replace the three independent design partners or the production-integration requirement.
-- Repository documentation is canonical. Hosted documentation mirrors it rather than creating a second source of truth.
+Move the devnet program upgrade authority from the deployer key to a 2-of-3
+Squads multisig and rehearse one governed upgrade before mainnet.
 
-The durable rationale for this sequence lives in `docs/adr/`; grant progress should link to verifiable artifacts rather than replace this roadmap with status prose.
+### Production integration
+
+Build a Squads-compatible proposal guard, or another production-bound consumer
+supported by observed demand, only after integration evidence establishes the
+right target. It must authenticate its actor before checking a role.
+
+### External security review and hosted docs
+
+Publish an independent review of a stable candidate with scope, commit, findings,
+and remediation status. Hosted docs may mirror the repository, which remains
+canonical.
+
+### Mainnet
+
+Deploy only after multisig custody, external review, reproducible release
+evidence, and an external production-bound integration are complete.
+
+### Consider freezing v1
+
+Remove upgrade authority only after the stable mainnet interface has external
+operating evidence and the published freeze proposal shows that immutability is
+safer than continued governed upgrades.
+
+## Deferred until evidence changes
+
+Do not add role hierarchy, eligibility modules, badges, claimable roles,
+delegation, instruction allowlists, spending caps, an agent control surface, an
+indexer dashboard, or a standalone Rust CPI crate because they sound useful.
+Build one only when observed integrations expose the missing primitive.
+
+The durable architecture decisions live in [`docs/adr/`](docs/adr/index.md).
+Status claims must link to tests, audit evidence, deployment output, or external
+artifacts.

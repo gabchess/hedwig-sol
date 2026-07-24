@@ -7,12 +7,15 @@ optional membership expiry, disable the role in an incident, and let any Solana
 program verify active membership via CPI.
 
 Hedwig is a devnet-stage Anchor program. The repository implements six
-instructions and covers them with 21 LiteSVM integration tests. The recorded
-devnet lifecycle exercises `create_org`, `create_role`, `assign_role`,
-`check_role`, and `revoke_role`. `set_role_enabled` is implemented and tested
-locally, but is not in the current devnet deployment.
+instructions, a secure reference consumer, and a private TypeScript SDK alpha.
+The local suites contain 40 LiteSVM integration tests and 27 SDK tests. The
+reviewed core and consumer are both live on devnet. On 2026-07-24, the SDK
+completed the six-instruction lifecycle and an authenticated member changed
+state in the separate consumer through CPI.
 
 Devnet program: `H4J9wWhraK2Zvn4o9aFheFVmAf7nfaBNPw3d7w77X1eC`
+
+Devnet reference consumer: `52D3pTYvMwLYbiigY5xg55n4HmtEzTKCEicx1Cojzo9a`
 
 ## Why Hedwig
 
@@ -34,35 +37,45 @@ Hedwig records membership; the consuming program decides what that role permits.
 
 ## Current status
 
-| Surface | Current state |
-|---|---|
-| Anchor program | Six instructions implemented |
-| Tests | 21 LiteSVM integration tests |
-| Devnet evidence | Five-instruction membership lifecycle recorded |
-| Circuit breaker | Implemented and tested locally; devnet redeploy required |
-| TypeScript SDK | RFC only; not built or published |
-| Secure CPI consumer | Planned reference integration |
-| Upgrade authority | Single deployer key; 2-of-3 Squads transfer planned before mainnet |
-| Network | Devnet; mainnet is planned |
+| Surface             | Current state                                                                       |
+| ------------------- | ----------------------------------------------------------------------------------- |
+| Anchor program      | Six instructions implemented                                                        |
+| Rust tests          | 40 LiteSVM integration tests across the core and consumer                           |
+| TypeScript tests    | 27 SDK tests plus SDK and app typechecks                                            |
+| Devnet evidence     | Upgrade verified at slot `478655638`; six-instruction lifecycle finalized afterward |
+| Circuit breaker     | Live `enabled=false` state verified on devnet                                       |
+| TypeScript SDK      | Private local `0.1.0-alpha.0`; built and tested, not published                      |
+| Secure CPI consumer | Deployed at slot `478667066`; live Hedwig-gated state change verified               |
+| Upgrade authority   | Single deployer key; 2-of-3 Squads transfer planned before mainnet                  |
+| Network             | Devnet; mainnet is planned                                                          |
 
 See [ROADMAP.md](ROADMAP.md) for evidence-gated delivery milestones and
 [THREAT-MODEL.md](THREAT-MODEL.md) for the current trust boundaries.
 
-Deployment evidence was checked on 2026-07-13 with `solana program show`: the
-live program was last deployed at slot `468922773` on 2026-06-12, before
-`set_role_enabled` was added. Its upgrade-authority pubkey is
-`8gbaJEfM5VDs9BpFLgwMTq7s2FkVpEri8ZnPbxn4HPqY`.
+Deployment evidence was checked on 2026-07-24. The live program was upgraded at
+slot `478655638`; its upgrade-authority pubkey remains
+`8gbaJEfM5VDs9BpFLgwMTq7s2FkVpEri8ZnPbxn4HPqY`. The reviewed ELF SHA-256 is
+`42670041e7df0f9832930bfa511b884e8b59ceebc8e14b0638c4627a83e6aed3`.
+See the
+[promotion record](docs/audits/2026-07-24-devnet-promotion.md) for the
+transaction, loader-padding proof, and six lifecycle signatures.
+
+The project received USDG 1,500 from a USDG 3,000 grant. No written checklist
+defines the remaining tranche. Progress is tracked through the evidence gates
+in [ROADMAP.md](ROADMAP.md) and the public
+[grant progress ledger](docs/grant-progress.md), without treating the reference
+consumer as independent adoption.
 
 ## Instructions
 
-| Instruction | Authorization | Effect |
-|---|---|---|
-| `create_org` | Authority signs | Creates the authority's org namespace |
-| `create_role` | Org authority signs | Creates an enabled named role under the org |
-| `assign_role` | Role admin signs | Creates a member PDA, optionally with expiry |
-| `revoke_role` | Role admin signs | Closes the member PDA and returns its rent to the admin |
-| `check_role` | No signer required | Returns success only for an enabled, unexpired membership |
-| `set_role_enabled` | Role admin signs | Enables or disables checks and new assignments for the role |
+| Instruction        | Authorization       | Effect                                                      |
+| ------------------ | ------------------- | ----------------------------------------------------------- |
+| `create_org`       | Authority signs     | Creates the authority's org namespace                       |
+| `create_role`      | Org authority signs | Creates an enabled named role under the org                 |
+| `assign_role`      | Role admin signs    | Creates a member PDA, optionally with expiry                |
+| `revoke_role`      | Role admin signs    | Closes the member PDA and returns its rent to the admin     |
+| `check_role`       | No signer required  | Returns success only for an enabled, unexpired membership   |
+| `set_role_enabled` | Role admin signs    | Enables or disables checks and new assignments for the role |
 
 The current program creates one org per authority. A role's admin is initialized
 to that org authority and cannot yet be changed. Disabling a role preserves its
@@ -96,11 +109,11 @@ that authenticated account as `holder`:
 
 ```rust
 hedwig_sol::cpi::check_role(CpiContext::new(
-    ctx.accounts.hedwig_program.to_account_info(),
+    ctx.accounts.hedwig_program.key(),
     hedwig_sol::cpi::accounts::CheckRole {
         member: ctx.accounts.member.to_account_info(),
         role: ctx.accounts.role.to_account_info(),
-        holder: ctx.accounts.actor.to_account_info(), // actor is authenticated here
+        holder: ctx.accounts.actor.to_account_info(),
     },
 ))?;
 ```
@@ -109,8 +122,14 @@ The CPI returns `Ok(())` on active membership and a Hedwig error otherwise. With
 the `?` shown above, a failed check aborts the consuming instruction. Hedwig does
 not return a boolean and does not grant transaction authority by itself.
 
-The Rust CPI interface currently comes from the program crate. The planned
-TypeScript SDK and reference consumer are tracked in [ROADMAP.md](ROADMAP.md).
+The Rust CPI interface comes from the program crate. The compiling reference
+consumer, its negative tests, and the TypeScript client flow are documented in
+[the integration guide](docs/integration-guide.md).
+
+The reference consumer is live on devnet. Its first verified state change used
+an authenticated signer as the Hedwig holder and incremented a separate
+consumer-owned counter from zero to one. This is deployment and integration
+evidence, not a design-partner or customer claim.
 
 ## Run locally
 
@@ -120,19 +139,32 @@ Requirements: Rust, Anchor CLI 1.0.2, and Solana/Agave CLI 4.0.1 or newer.
 cargo fmt --check
 cargo build
 cargo build-sbf --manifest-path programs/hedwig_sol/Cargo.toml
-cargo test
+cargo build-sbf --manifest-path programs/hedwig_consumer/Cargo.toml
+cargo test --workspace
+yarn sdk:typecheck
+yarn sdk:test
+./node_modules/.bin/tsc -p app/tsconfig.json --noEmit
 ```
 
-The tests run with LiteSVM and do not require a network connection. To run the
-recorded membership lifecycle against devnet, see [app/README.md](app/README.md).
+The tests run without a network connection. Build both SBF artifacts before the
+workspace tests because the LiteSVM fixtures load them at compile time. To run
+the membership lifecycle against devnet, see
+[app/README.md](app/README.md).
 
 ## Repository guide
 
 - [docs/architecture.md](docs/architecture.md): domain boundaries and code map
+- [docs/integration-guide.md](docs/integration-guide.md): secure CPI and local SDK use
+- [docs/grant-progress.md](docs/grant-progress.md): public delivery and evidence ledger
+- [docs/operations.md](docs/operations.md): devnet upgrade, verification, and rollback
+- [docs/audits/2026-07-24-full-audit.md](docs/audits/2026-07-24-full-audit.md): commit-pinned audit findings
+- [docs/audits/2026-07-24-devnet-promotion.md](docs/audits/2026-07-24-devnet-promotion.md): live deployment and lifecycle proof
+- [docs/audits/2026-07-24-consumer-devnet-integration.md](docs/audits/2026-07-24-consumer-devnet-integration.md): live CPI consumer proof
 - [docs/adr/index.md](docs/adr/index.md): durable product and architecture decisions
 - [THREAT-MODEL.md](THREAT-MODEL.md): assets, trust boundaries, and open risks
+- [SECURITY.md](SECURITY.md): private vulnerability reporting
 - [ROADMAP.md](ROADMAP.md): shipped evidence and remaining milestones
-- [docs/sdk-rfc.md](docs/sdk-rfc.md): historical SDK RFC; the SDK is not shipped
+- [docs/sdk-rfc.md](docs/sdk-rfc.md): historical SDK design record
 - [CONTRIBUTING.md](CONTRIBUTING.md): contributor workflow and verification gates
 
 ## License

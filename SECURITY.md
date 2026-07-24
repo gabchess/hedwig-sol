@@ -1,0 +1,35 @@
+# Security policy
+
+Hedwig is a devnet-stage program. No mainnet release or bug bounty exists.
+
+## Report privately
+
+Use [GitHub's private security-advisory form](https://github.com/gabchess/hedwig-sol/security/advisories/new).
+If that form is unavailable, contact the repository owner through the private
+contact route on their GitHub profile and ask for a secure channel.
+
+Do not open a public issue with exploit details, private keys, RPC credentials,
+or a working proof of concept.
+
+Include:
+
+- affected commit, program ID, and cluster;
+- impact and required attacker access;
+- exact reproduction steps;
+- relevant transaction signatures, accounts, logs, or test code; and
+- any suggested mitigation.
+
+## Scope
+
+The current supported target is the repository's reviewed devnet commit and the
+fixed program ID listed in `README.md`. The local reference consumer and private
+SDK alpha are test surfaces, not deployed services.
+
+Reports about mainnet, npm publication, hosted infrastructure, or external
+integrations describe surfaces Hedwig does not operate today.
+
+## Response
+
+The maintainer will preserve the report privately, validate reachability and
+impact, and follow [`docs/operations.md`](docs/operations.md) for containment,
+recovery, evidence handling, and incident follow-up.

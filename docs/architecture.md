@@ -9,14 +9,14 @@ and symbol names.
 
 Hedwig answers one question: does this pubkey currently hold this role?
 
-| Domain term | Onchain meaning |
-|---|---|
-| `Org` | Namespace owned by one authority pubkey |
-| `Role` | Named authority under an org, controlled by its role admin |
-| `Member` | Account proving one holder pubkey belongs to one role |
-| Holder | Pubkey named by a member account; not necessarily a signer |
-| Circuit breaker | Role-wide enabled flag managed through `set_role_enabled` |
-| Role check | CPI-friendly validation through `check_role` |
+| Domain term     | Onchain meaning                                            |
+| --------------- | ---------------------------------------------------------- |
+| `Org`           | Namespace owned by one authority pubkey                    |
+| `Role`          | Named authority under an org, controlled by its role admin |
+| `Member`        | Account proving one holder pubkey belongs to one role      |
+| Holder          | Pubkey named by a member account; not necessarily a signer |
+| Circuit breaker | Role-wide enabled flag managed through `set_role_enabled`  |
+| Role check      | CPI-friendly validation through `check_role`               |
 
 Hedwig does not define what a role authorizes inside another program. It does not
 authenticate the actor presented by that program, create delegation chains, or
@@ -66,20 +66,31 @@ For CPI use, the consuming program must first authenticate the actor it maps to
 own PDA validation. The consumer then invokes `check_role` and propagates its
 `Result`; propagating an error aborts the consuming instruction.
 
+The repository's reference consumer demonstrates the signer pattern. Its
+counter PDA and stored authority are bound to the signer, the signer is passed
+as Hedwig's holder, and `Program<HedwigSol>` pins the CPI target. The consumer
+is a separate live devnet program and reference integration, not a new Hedwig
+domain layer or evidence of independent adoption.
+
 ## Repository map
 
-| Path | Responsibility |
-|---|---|
-| `programs/hedwig_sol/src/lib.rs` | Public six-instruction Anchor surface |
-| `programs/hedwig_sol/src/instructions/` | One file per authorization action |
-| `programs/hedwig_sol/src/state.rs` | `Org`, `Role`, and `Member` account state |
-| `programs/hedwig_sol/src/error.rs` | Authorization and validation errors |
-| `programs/hedwig_sol/src/constants.rs` | PDA seed and account-size constants |
-| `programs/hedwig_sol/tests/` | LiteSVM behavior and lifecycle tests |
-| `app/` | Devnet membership-lifecycle client |
-| `docs/adr/` | Durable product and architecture decisions |
-| `THREAT-MODEL.md` | Trust boundaries and security posture |
-| `ROADMAP.md` | Evidence-gated delivery sequence |
+| Path                                    | Responsibility                                                  |
+| --------------------------------------- | --------------------------------------------------------------- |
+| `programs/hedwig_sol/src/lib.rs`        | Public six-instruction Anchor surface                           |
+| `programs/hedwig_sol/src/instructions/` | One file per authorization action                               |
+| `programs/hedwig_sol/src/state.rs`      | `Org`, `Role`, and `Member` account state                       |
+| `programs/hedwig_sol/src/error.rs`      | Authorization and validation errors                             |
+| `programs/hedwig_sol/src/constants.rs`  | PDA seed and account-size constants                             |
+| `programs/hedwig_sol/tests/`            | LiteSVM behavior and lifecycle tests                            |
+| `programs/hedwig_consumer/`             | Secure CPI reference consumer and negative tests                |
+| `sdk/`                                  | Private six-instruction TypeScript SDK alpha                    |
+| `app/`                                  | SDK-driven core lifecycle and live consumer-integration clients |
+| `docs/adr/`                             | Durable product and architecture decisions                      |
+| `docs/integration-guide.md`             | Actor binding, CPI, and local SDK usage                         |
+| `docs/grant-progress.md`                | Public shipped-work and claim-evidence ledger                   |
+| `docs/operations.md`                    | Devnet upgrade, verification, rollback, and incident steps      |
+| `THREAT-MODEL.md`                       | Trust boundaries and security posture                           |
+| `ROADMAP.md`                            | Evidence-gated delivery sequence                                |
 
 This is screaming architecture at the scale the program needs: files and types
 name the authorization domain, while Anchor's expected root and crate layout stay
