@@ -1,8 +1,13 @@
 # Hedwig threat model
 
-This document defines the security boundary of Hedwig's current repository program. It distinguishes checks enforced by Hedwig from checks an integrating program must perform. The live devnet deployment contains the first five instructions; the locally tested `set_role_enabled` circuit breaker requires a redeploy.
+This document defines the security boundary of Hedwig and its reference
+consumer. It distinguishes checks enforced by Hedwig from checks an integrating
+program must perform. The live Hedwig deployment contains all six reviewed
+instructions, including the `set_role_enabled` circuit breaker.
 
-Hedwig has not completed an external security review. The 21 LiteSVM integration tests are evidence of the tested behaviors below, not a substitute for one.
+Hedwig has not completed an external security review. The 28 core and 12
+consumer LiteSVM integration tests are evidence of the tested behaviors below,
+not a substitute for one.
 
 ## Assets and security properties
 
@@ -22,13 +27,13 @@ The program is intended to enforce these properties:
 
 ## Trust assumptions
 
-| Component | Current controller | Consequence if compromised |
-|---|---|---|
-| Org authority | Signer that created the org | Can create any role in that org. The authority cannot currently be rotated. |
-| Role admin | Org authority recorded when the role is created | Can assign and revoke memberships and enable or disable the role. The admin cannot currently be rotated. |
-| Program upgrade authority | Pubkey `8gba...HPqY`, operationally recorded as deployer-controlled | Can replace all program logic. This is the highest current deployment risk. |
-| Solana runtime and Clock sysvar | Solana validator consensus | Supply account ownership, transaction atomicity, signatures, and time used by expiry checks. |
-| Integrating program | Its own upgrade and instruction authorities | Must authenticate the actor whose membership it asks Hedwig to check. |
+| Component                       | Current controller                                         | Consequence if compromised                                                                               |
+| ------------------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Org authority                   | Signer that created the org                                | Can create any role in that org. The authority cannot currently be rotated.                              |
+| Role admin                      | Org authority recorded when the role is created            | Can assign and revoke memberships and enable or disable the role. The admin cannot currently be rotated. |
+| Program upgrade authority       | Pubkey `8gba...HPqY` for Hedwig and the reference consumer | Can replace either live program. This is the highest current deployment risk.                            |
+| Solana runtime and Clock sysvar | Solana validator consensus                                 | Supply account ownership, transaction atomicity, signatures, and time used by expiry checks.             |
+| Integrating program             | Its own upgrade and instruction authorities                | Must authenticate the actor whose membership it asks Hedwig to check.                                    |
 
 No offchain service, indexer, or cache participates in an onchain role check.
 
@@ -59,7 +64,11 @@ This layout allows one `Org` per authority and one `Role` per name within an org
 
 A consuming program must bind `holder` to the actor it intends to authorize before trusting a successful CPI. Depending on the integration, that means requiring a `Signer`, validating a PDA owned by the consumer, or applying another explicit identity constraint. Failing to do so can let a caller present someone else's active membership.
 
-A tested reference consumer demonstrating both signer and validated-PDA patterns is a prerequisite for partner integrations; it is not shipped yet.
+The repository ships a tested reference consumer that requires a signer, binds
+its counter PDA and stored authority to that signer, passes the same account as
+Hedwig's holder, and pins the Hedwig program type. The consumer is live on
+devnet and its first state change is recorded publicly. It remains builder-owned
+and is not an external integration or production evidence.
 
 ## Membership lifecycle
 
@@ -95,25 +104,61 @@ Supporting multiple orgs per authority or authority rotation would change the st
 
 ## Deployment and upgrade authority
 
-As checked on 2026-07-13, the devnet program was last deployed at slot `468922773` on 2026-06-12 and its upgrade authority was `8gbaJEfM5VDs9BpFLgwMTq7s2FkVpEri8ZnPbxn4HPqY`. The repository records that authority as a single deployer-controlled key. A compromise could bypass every invariant described above by deploying different code.
+As checked on 2026-07-24, the devnet program was upgraded at slot `478655638`
+and its upgrade authority remained
+`8gbaJEfM5VDs9BpFLgwMTq7s2FkVpEri8ZnPbxn4HPqY`. The reviewed compiled ELF
+matched every deployed code byte; the larger ProgramData allocation contained
+only zero bytes after the ELF. The repository records the authority as a single
+deployer-controlled key. A compromise could bypass every invariant described
+above by deploying different code.
 
-The deployment predates the addition of `set_role_enabled`; circuit-breaker guarantees apply to the current source and tests, not to the live devnet executable until it is redeployed.
+The live lifecycle called all six instructions and fetched `enabled=false`
+after the circuit breaker was set. This proves that transaction path on devnet,
+not independent production use or mainnet safety.
+
+The reference consumer was deployed at slot `478667066` under program ID
+`52D3pTYvMwLYbiigY5xg55n4HmtEzTKCEicx1Cojzo9a`. Its live 176,264-byte dump
+matches the reviewed artifact byte for byte. A fresh authenticated actor then
+incremented a consumer-owned counter through Hedwig CPI. Both programs retain
+the same single deployer-controlled upgrade authority, so the live integration
+does not reduce the upgrade-key risk.
+
+The ignored local keypair at `target/deploy/hedwig_sol-keypair.json` does not
+derive the fixed devnet program ID. Every upgrade must therefore name
+`H4J9wWhraK2Zvn4o9aFheFVmAf7nfaBNPw3d7w77X1eC` explicitly and must deploy the
+artifact whose hash was recorded by the release audit.
 
 Before mainnet, the upgrade authority will move to a 2-of-3 Squads multisig. Removing upgrade authority entirely is a later, evidence-gated decision: stable v1 interfaces, an external security review with all critical and high-severity findings closed, and at least one external production integration must exist first. Freezing earlier would prevent remediation of defects discovered during integration or review.
 
 ## Test evidence
 
-The current 21-test LiteSVM suite covers:
+The current 28-test core LiteSVM suite covers:
 
 - rejected non-authority role creation;
 - rejected non-admin assignment, revocation, and role toggling;
 - wrong-holder and wrong-role checks;
-- past, negative, active, and non-expiring membership timestamps;
-- revoked and duplicate memberships;
+- before, equal, and after-expiry checks plus invalid assignment timestamps;
+- revoked, closed, re-granted, and duplicate memberships;
 - disabled-role and re-enable behavior;
-- checked `role_count` and `member_count` lifecycle updates.
+- byte-length boundaries for org and role names;
+- checked `role_count` and `member_count` lifecycle updates; and
+- exact error and unchanged-state assertions on negative paths.
 
-The suite does not establish correctness of an external consumer, upgrade-key operations, Squads governance, or mainnet deployment. Those require separate evidence in the roadmap.
+The 12-test consumer suite covers:
+
+- an authenticated member incrementing protected state;
+- a privileged third party that cannot be substituted for the actor;
+- missing and wrong consumer authority;
+- wrong role, expired, disabled, and revoked membership;
+- duplicate consumer initialization;
+- checked counter overflow;
+- a substituted Hedwig program; and
+- a role account with the wrong owner.
+
+The TypeScript SDK has 27 tests for PDA derivation, all six builders and senders,
+IDL vectors, UTF-8 limits, expiry conversion, signer forwarding, and provider
+failure. These suites do not establish independent adoption, upgrade-key
+operations, Squads governance, external review, or mainnet safety.
 
 ## Out of scope for the current devnet program
 
@@ -129,4 +174,6 @@ These features belong in integrating or wrapper programs unless a future ADR cha
 
 ## Reporting vulnerabilities
 
-Do not open a public issue for an undisclosed vulnerability. Use GitHub's private vulnerability-reporting flow for this repository if available; otherwise contact the maintainer through the links on the repository owner's GitHub profile and request a private channel. There is no bug bounty program at this stage.
+Do not open a public issue for an undisclosed vulnerability. Follow
+[`SECURITY.md`](SECURITY.md) to use GitHub's private advisory flow or request a
+private maintainer channel. There is no bug bounty program at this stage.

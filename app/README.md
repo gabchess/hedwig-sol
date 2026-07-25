@@ -1,11 +1,11 @@
 # Hedwig devnet membership demo
 
-Runs the five-instruction membership lifecycle against the recorded Hedwig
-devnet deployment:
-create_org, create_role, assign_role, check_role, revoke_role.
+Runs Hedwig's six-instruction membership lifecycle through `@hedwig-sol/sdk`:
+create_org, create_role, assign_role, check_role, set_role_enabled(false), and
+revoke_role.
 
-The demo does not exercise `set_role_enabled`. That sixth instruction is
-implemented and tested locally but is not in the current devnet deployment.
+The same app also proves that an authenticated Hedwig member can change state
+in the separate devnet reference consumer through CPI.
 
 ## Prerequisites
 
@@ -22,7 +22,18 @@ solana airdrop 1 <your-pubkey> --url devnet
 
 ## Install
 
+From the repository root, install the locked root dependencies and build the
+SDK before resolving the app's local file dependency:
+
 ```bash
+yarn install --frozen-lockfile
+yarn sdk:build
+```
+
+Then install the app dependencies through Socket:
+
+```bash
+cd app
 socket npm install
 ```
 
@@ -31,6 +42,9 @@ socket npm install
 ```bash
 npm run demo
 ```
+
+The app's `predemo` hook rebuilds the SDK through the root `sdk:build` script
+before each run. The locked root install is still required on a clean checkout.
 
 By default the demo connects to the public devnet RPC
 (`https://api.devnet.solana.com`), which rate-limits under load. To use a
@@ -51,4 +65,32 @@ run.
 
 The script prints one labeled line per instruction with the resulting
 transaction signature, reads back the Role and Member account state after
-`assign_role`, and ends with `full lifecycle OK on devnet` on success.
+`assign_role`, disables the Role, confirms the Member PDA closes after
+`revoke_role`, and ends with `six-instruction lifecycle OK on devnet` on
+success.
+
+The generated holder does not sign. `check_role` proves that its pubkey has an
+active membership; it does not authenticate control of that key.
+
+## Run the live consumer proof
+
+The consumer proof funds a fresh actor with 0.02 devnet SOL, makes that actor its
+own org authority and role holder, initializes a counter owned by the reference
+consumer, and increments it through Hedwig CPI:
+
+```bash
+npm run consumer-demo
+```
+
+It requires both live program IDs:
+
+- Hedwig: `H4J9wWhraK2Zvn4o9aFheFVmAf7nfaBNPw3d7w77X1eC`
+- Consumer: `52D3pTYvMwLYbiigY5xg55n4HmtEzTKCEicx1Cojzo9a`
+
+The command verifies the consumer account owner, Anchor discriminator, stored
+authority, stored role, counter value, and matching Hedwig member holder. It
+ends with `Hedwig-gated consumer state change OK on devnet`.
+
+The first public run is recorded in
+[`docs/audits/2026-07-24-consumer-devnet-integration.md`](../docs/audits/2026-07-24-consumer-devnet-integration.md).
+It is a builder-owned reference integration, not independent adoption.

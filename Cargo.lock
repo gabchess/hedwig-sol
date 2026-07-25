@@ -1378,6 +1378,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "hedwig_consumer"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "hedwig_sol",
+ "litesvm",
+ "solana-instruction-error",
+ "solana-keypair",
+ "solana-message",
+ "solana-signer",
+ "solana-transaction",
+ "solana-transaction-error",
+]
+
+[[package]]
 name = "hedwig_sol"
 version = "0.1.0"
 dependencies = [

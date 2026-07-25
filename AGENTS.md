@@ -12,7 +12,10 @@ Framing: roles as a composable onchain primitive for organizations, usable by a 
 
 - Solana / Rust / Anchor 1.0.2
 - Devnet program: `H4J9wWhraK2Zvn4o9aFheFVmAf7nfaBNPw3d7w77X1eC`
-- TS SDK (`@hedwig-sol/sdk`): RFC only (`docs/sdk-rfc.md`), not built, not published
+- TS SDK (`@hedwig-sol/sdk`): private local `0.1.0-alpha.0`, built and tested,
+  not published
+- Secure consumer: devnet reference at
+  `52D3pTYvMwLYbiigY5xg55n4HmtEzTKCEicx1Cojzo9a`
 - MIT license
 
 ## Architecture
@@ -21,14 +24,26 @@ Framing: roles as a composable onchain primitive for organizations, usable by a 
 
 ## Conventions
 
-- CI gate (`.github/workflows/ci.yml`): `cargo fmt --check`, `cargo build`, `cargo build-sbf`, `cargo test` on ubuntu-latest. Match it before proposing any change.
-- Tests use LiteSVM: per-instruction and lifecycle test files under `programs/hedwig_sol/tests/` (21 integration tests).
+- CI gate (`.github/workflows/ci.yml`): match every Rust, SDK, and app gate it
+  declares before proposing a change.
+- Tests use LiteSVM: 28 core integration tests under
+  `programs/hedwig_sol/tests/` and 12 consumer integration tests under
+  `programs/hedwig_consumer/tests/`.
 - Project source carries zero TODO/FIXME/unimplemented markers. Keep it that way; anything unfinished goes in docs/tracker, not a code stub.
-- `app/demo.ts` records the five-instruction devnet membership lifecycle. The live program was last deployed at slot `468922773` on 2026-06-12; it predates `set_role_enabled`, so a redeploy is required for the sixth instruction.
+- `app/demo.ts` uses the local SDK for the exact six-instruction lifecycle and
+  reads back disabled Role and closed Member state. Do not run it before the
+  six-instruction devnet promotion is verified.
+- `app/consumer-demo.ts` proves an authenticated member can change state in the
+  separate devnet consumer through Hedwig CPI.
+- Build both `programs/hedwig_sol` and `programs/hedwig_consumer` SBF artifacts
+  before `cargo test --workspace`; the LiteSVM fixtures load those artifacts.
 
 ## What NOT to touch without explicit sign-off
 
 - The devnet program ID: treat as a fixed identity for this milestone.
+- The ignored local program keypair does not derive the fixed devnet program
+  ID. Any upgrade must pass
+  `--program-id H4J9wWhraK2Zvn4o9aFheFVmAf7nfaBNPw3d7w77X1eC` explicitly.
 - The single-deployer-key upgrade authority: a **named, tracked risk** in `THREAT-MODEL.md`; the roadmap requires a 2-of-3 Squads multisig before mainnet. Do not change it silently.
 - `docs/sdk-rfc.md`: locked historical design doc. Do not edit it in place; `docs/adr/0003-adoption-led-interfaces.md` records the active decisions that supersede parts of it.
 - Naming/branding: "Hedwig" only.

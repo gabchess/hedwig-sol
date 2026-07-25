@@ -6,14 +6,19 @@ target/
 # Node dependencies
 node_modules/
 .yarn/
+sdk/dist/
 
 # Environment and secrets
 .env
-.env.local
+.env.*
+!.env.example
 *.pem
 id.json
 *-keypair.json
 *.keypair.json
+*-delegate.json
+.sonda/
+test-ledger/
 
 # macOS
 .DS_Store

@@ -17,10 +17,7 @@ fn test_set_role_enabled_disable_blocks_check_role() {
         &[],
         ix_set_role_enabled(role, admin.pubkey(), false),
     );
-    assert!(
-        result.is_ok(),
-        "authorized disable should succeed: {result:?}"
-    );
+    result.expect("authorized disable should succeed");
 
     let state = account_data::<hedwig_sol::Role>(&svm, &role);
     assert!(!state.enabled, "role.enabled should be false after disable");
@@ -49,20 +46,42 @@ fn test_set_role_enabled_reenable_allows_check_role() {
         &[],
         ix_set_role_enabled(role, admin.pubkey(), true),
     );
-    assert!(
-        result.is_ok(),
-        "authorized re-enable should succeed: {result:?}"
-    );
+    result.expect("authorized re-enable should succeed");
 
     let state = account_data::<hedwig_sol::Role>(&svm, &role);
     assert!(state.enabled, "role.enabled should be true after re-enable");
 
     let caller = funded_keypair(&mut svm);
     let check = send(&mut svm, &caller, &[], ix_check_role(member, role, holder));
-    assert!(
-        check.is_ok(),
-        "check_role should pass once re-enabled: {check:?}"
+    check.expect("check_role should pass once re-enabled");
+}
+
+#[test]
+fn test_disabled_role_rejects_fresh_assignment_without_state_change() {
+    let mut svm = new_svm();
+    let (_org, admin, role) = setup_role(&mut svm, "Acme", "admin");
+    send(
+        &mut svm,
+        &admin,
+        &[],
+        ix_set_role_enabled(role, admin.pubkey(), false),
+    )
+    .expect("disable should succeed");
+
+    let holder = funded_keypair(&mut svm).pubkey();
+    let (member, _bump) = member_pda(&role, &holder);
+    let result = send(
+        &mut svm,
+        &admin,
+        &[],
+        ix_assign_role(member, role, holder, admin.pubkey(), 0),
     );
+
+    assert_hedwig_error(result, HedwigError::RoleDisabled);
+    assert!(svm.get_account(&member).is_none());
+    let role_state = account_data::<hedwig_sol::Role>(&svm, &role);
+    assert!(!role_state.enabled);
+    assert_eq!(role_state.member_count, 0);
 }
 
 #[test]
@@ -79,4 +98,5 @@ fn test_set_role_enabled_rejects_non_admin() {
     );
 
     assert_hedwig_error(result, HedwigError::NotRoleAdmin);
+    assert!(account_data::<hedwig_sol::Role>(&svm, &role).enabled);
 }
