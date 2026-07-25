@@ -12,8 +12,6 @@ rebuilt, reran the full 42-test Rust suite, and was deployed separately after
 the core promotion. The clean public source commit above includes that ID
 alignment. Its exact-byte and live CPI proof is recorded in
 [`2026-07-24-consumer-devnet-integration.md`](./2026-07-24-consumer-devnet-integration.md).
-The statement below that the consumer was not deployed describes the
-review checkpoint, not the later promotion.
 
 ## Verdict
 
@@ -36,8 +34,9 @@ separate release review.
 - All 949 applicable or feature-screened controls from the installed
   `solanabr/auditor-skill` checklists
 
-The reference consumer is local proof code. It is not deployed. The SDK is a
-private repository alpha and is not published to npm.
+At the audit checkpoint, the reference consumer was local proof code. It was
+later deployed to devnet and remains builder-owned evidence, not independent
+adoption. The SDK is a private repository alpha and is not published to npm.
 
 ## Evidence
 

@@ -9,8 +9,8 @@ Run the full local release checks before opening a PR:
 ```bash
 cargo fmt --check
 cargo build
-cargo build-sbf --manifest-path programs/hedwig_sol/Cargo.toml
 cargo build-sbf --manifest-path programs/hedwig_consumer/Cargo.toml
+cargo build-sbf --manifest-path programs/hedwig_sol/Cargo.toml
 cargo test --workspace
 yarn sdk:typecheck
 yarn sdk:test

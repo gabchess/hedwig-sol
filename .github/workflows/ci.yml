@@ -59,8 +59,8 @@ jobs:
       - name: Build on-chain programs (.so)
         run: |
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-          cargo build-sbf --manifest-path programs/hedwig_sol/Cargo.toml
           cargo build-sbf --manifest-path programs/hedwig_consumer/Cargo.toml
+          cargo build-sbf --manifest-path programs/hedwig_sol/Cargo.toml
 
       - name: Lint
         run: |

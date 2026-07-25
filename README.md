@@ -138,8 +138,8 @@ Requirements: Rust, Anchor CLI 1.0.2, and Solana/Agave CLI 4.0.1 or newer.
 ```bash
 cargo fmt --check
 cargo build
-cargo build-sbf --manifest-path programs/hedwig_sol/Cargo.toml
 cargo build-sbf --manifest-path programs/hedwig_consumer/Cargo.toml
+cargo build-sbf --manifest-path programs/hedwig_sol/Cargo.toml
 cargo test --workspace
 yarn sdk:typecheck
 yarn sdk:test

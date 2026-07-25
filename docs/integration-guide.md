@@ -79,8 +79,8 @@ requires each sender to receive its signer array explicitly. See
 Both SBF artifacts must exist before the workspace tests run:
 
 ```bash
-cargo build-sbf --manifest-path programs/hedwig_sol/Cargo.toml
 cargo build-sbf --manifest-path programs/hedwig_consumer/Cargo.toml
+cargo build-sbf --manifest-path programs/hedwig_sol/Cargo.toml
 cargo test --workspace
 yarn sdk:typecheck
 yarn sdk:test

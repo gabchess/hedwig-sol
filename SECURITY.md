@@ -21,9 +21,10 @@ Include:
 
 ## Scope
 
-The current supported target is the repository's reviewed devnet commit and the
-fixed program ID listed in `README.md`. The local reference consumer and private
-SDK alpha are test surfaces, not deployed services.
+The current supported targets are the repository's reviewed devnet commit and
+the fixed core and reference-consumer program IDs listed in `README.md`. The
+reference consumer is deployed on devnet. The private SDK alpha remains a
+repository test surface and is not published.
 
 Reports about mainnet, npm publication, hosted infrastructure, or external
 integrations describe surfaces Hedwig does not operate today.

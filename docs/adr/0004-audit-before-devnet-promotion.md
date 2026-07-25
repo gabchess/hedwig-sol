@@ -39,7 +39,8 @@ Its small-core, evidence, governance, mainnet, and freeze gates remain active.
 - Good: the secure consumer proves Hedwig's most important integration rule.
 - Good: local package use tests the SDK without claiming distribution or use.
 - Bad: external teams cannot install the SDK from npm yet.
-- Neutral: the consumer remains local evidence and does not count as adoption.
+- Neutral: the consumer remains builder-owned evidence and does not count as
+  adoption, whether local or deployed.
 
 ## Rejected alternatives
 

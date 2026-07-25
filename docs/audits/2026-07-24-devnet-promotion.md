@@ -77,5 +77,8 @@ deployer. The predeploy dump remained available for rollback.
 | `set_role_enabled` | `4ivsEv1WeH574xoQjcY7xPr2zF5FsbLktkpzhAepVTyjkebbCuNcuh7gnkPJKoeZhqZVHXrisTgvuCyh7ksiMjin` |
 | `revoke_role`      | `5WWvVh9eSJgNqaQ4d2AHyht1jVgj7u7XeX6sFpGT99199sR888qxWJHWVaNvkLgnZgmFYaSBm6MAV5M9FDu9PBvf` |
 
-This promotion changes the Hedwig program only. The reference consumer remains
-local and undeployed. Authority was neither transferred nor frozen.
+This promotion changed the Hedwig program only. At this checkpoint, the
+reference consumer remained local and undeployed. It was deployed later under
+the separate
+[consumer promotion record](2026-07-24-consumer-devnet-integration.md).
+Authority was neither transferred nor frozen.
