@@ -9,6 +9,12 @@ Hedwig has not completed an external security review. The 28 core and 12
 consumer LiteSVM integration tests are evidence of the tested behaviors below,
 not a substitute for one.
 
+The 2026-07-29 founder-led pilot preparation changed research, positioning, and
+operating documents only. It did not change program code, deployed bytes,
+account layouts, authorities, or any trust boundary in this model. A future
+pilot must map a consumer's actor authentication and direct or CPI path before
+it can support a security claim.
+
 ## Assets and security properties
 
 Hedwig protects three kinds of state:

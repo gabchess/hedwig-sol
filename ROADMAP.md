@@ -1,8 +1,10 @@
 # Hedwig roadmap
 
-Hedwig advances through proof, not feature count. The delivery order is:
-secure the integration boundary, make the six-instruction core easy to use,
-observe independent use, harden governance, then consider mainnet.
+Hedwig is shared authorization for related Anchor programs: one canonical role
+store, with each consumer still responsible for authenticating its actor.
+Hedwig advances through proof, not feature count. The delivery order is to
+secure the integration boundary, test one real two-program path, harden
+governance, then consider mainnet.
 
 ## Grant context
 
@@ -86,36 +88,58 @@ The [grant progress ledger](docs/grant-progress.md) maps shipped work to public
 artifacts. It is the public claim record for the remaining USDG 1,500; the
 roadmap remains the decision record.
 
-## Next evidence gate: one independent integration experiment
+### Founder-led pilot preparation
 
-The next product question is whether another Solana team can use Hedwig to gate
-a real state-changing action without builder help hiding integration problems.
-Subject to separate outreach approval, run one concierge devnet integration and
-record:
+The 2026-07-29 preparation stage shipped:
 
-- the team's existing authorization behavior;
-- time to the first successful role check;
-- holder-authentication mistakes and repeated account choreography;
-- whether the team keeps the integration after the test; and
-- whether package distribution, a Rust CPI helper, or another missing surface
-  blocked them.
+- the [seven-day pilot offer](docs/pilot-program.md);
+- an approved [design](docs/superpowers/specs/2026-07-29-founder-led-pilot-preparation-design.md)
+  and [implementation plan](docs/superpowers/plans/2026-07-29-founder-led-pilot-preparation.md);
+- a fixed 30/25/20/15/10 qualification rubric;
+- 15 research-qualified accounts and five personalized message pairs (five
+  primary messages and five follow-ups) in the private project vault;
+- a private authority-map interview, pilot memo, multisig worksheet, SDK
+  release checklist, outreach ledger, and Colosseum Eternal gate; and
+- the public
+  [preparation record](docs/progress/2026-07-29-pilot-preparation.md).
 
-This experiment is evidence, not a partner claim by default. The repository
-currently has no verified design partner, customer, revenue, or production use.
+No message has been sent. No external conversation, design partner, customer,
+signed pilot, revenue, or production use has been verified.
+
+## Next evidence gate: one signed seven-day pilot
+
+The next product question is whether one qualified Anchor team will expose a
+real state-changing path across two related programs and sign a bounded pilot.
+Subject to separate recipient, channel, and copy approval:
+
+- verify the technical owner and current release timing;
+- send one approved message on one approved channel;
+- interview past authorization behavior before presenting Hedwig;
+- produce one manual before/after authority map;
+- sign a seven-day scope for one two-program direct or CPI path; and
+- end with an explicit merge, revise, or reject decision.
+
+Do not add product features before this signal. If no qualified team signs
+after the first approved outreach week, stop feature work, record the rejection
+reasons, and review the product thesis. SDK publication, deployment, custody
+changes, and the Colosseum timer remain separate decisions.
+
+The signed scope is the demand signal. The later integration is technical
+evidence, not a customer-success claim by default.
 
 ## Later gates
 
 ### Independent design partners
 
-Expand from the first experiment only if the signal is useful. Three independent
+Expand from the signed pilot only if the signal is useful. Three independent
 teams must publish or link reproducible devnet integration evidence. Builder
 fixtures and the reference consumer do not count.
 
 ### Agent runtime egress hardening
 
 Pilot [Hermes Agent's IronProxy](https://hermes-agent.nousresearch.com/docs/user-guide/egress/iron-proxy)
-for one Docker-sandboxed Hedwig/Estaleiro workflow after the first independent
-integration experiment. This belongs to the offchain agent runtime, not the
+for one Docker-sandboxed Hedwig/Estaleiro workflow after the first signed pilot
+and integration proof. This belongs to the offchain agent runtime, not the
 Hedwig program or authorization model. Its
 [implementation notes](https://hermes-agent.nousresearch.com/docs/developer-guide/egress-internals)
 define the security-sensitive lifecycle and current backend limits.
@@ -133,7 +157,7 @@ The pilot must:
 Adopt it only if the Docker proof passes and the operational burden is
 acceptable. Hermes currently wires IronProxy to Docker, not every terminal
 backend. This work hardens builder credentials; it is not evidence of Hedwig
-adoption and does not block the next devnet partner test.
+adoption and does not block the signed-pilot gate.
 
 ### Governed upgrade authority
 
