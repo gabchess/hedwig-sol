@@ -1,8 +1,9 @@
 # Hedwig devnet membership demo
 
-Runs Hedwig's six-instruction membership lifecycle through `@hedwig-sol/sdk`:
-create_org, create_role, assign_role, check_role, set_role_enabled(false), and
-revoke_role.
+This demo shows how related Anchor programs can share one Hedwig role store
+while each consumer still authenticates its own actor. It runs Hedwig's
+six-instruction membership lifecycle through `@hedwig-sol/sdk`: create_org,
+create_role, assign_role, check_role, set_role_enabled(false), and revoke_role.
 
 The same app also proves that an authenticated Hedwig member can change state
 in the separate devnet reference consumer through CPI.

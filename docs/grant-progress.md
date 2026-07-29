@@ -1,16 +1,35 @@
 # Grant progress ledger
 
-This ledger records public, verifiable progress toward Hedwig's USDG 3,000
-grant. USDG 1,500 has been received and USDG 1,500 remains. No written portal
-checklist defines release of the second tranche, so each claim below links to
-code, tests, or live evidence.
+This ledger records Hedwig's progress toward its USDG 3,000 grant. USDG 1,500
+has been received and USDG 1,500 remains. No written portal checklist defines
+release of the second tranche. Public software and deployment claims below link
+to code, tests, or live evidence. Builder-recorded private preparation is
+labeled as aggregate status and is not third-party-verifiable here.
 
 This file records delivery. It does not claim that the grant issuer accepted a
 milestone, that a repository fixture is a customer, or that unobserved demand
 exists.
 
 Public delivery review:
-[`#3 — Ship secure consumer integration and grant evidence`](https://github.com/gabchess/hedwig-sol/pull/3)
+[`#3: Ship secure consumer integration and grant evidence`](https://github.com/gabchess/hedwig-sol/pull/3)
+
+## Shipped on 2026-07-29
+
+| Delivery | Public evidence | State |
+| --- | --- | --- |
+| Narrow founder-led pilot decision | [pilot program](pilot-program.md), [design](superpowers/specs/2026-07-29-founder-led-pilot-preparation-design.md) | Shipped |
+| Dependency-aware preparation plan | [implementation plan](superpowers/plans/2026-07-29-founder-led-pilot-preparation.md) | Shipped |
+| Public preparation and claim record | [pilot preparation record](progress/2026-07-29-pilot-preparation.md), [roadmap](../ROADMAP.md) | Shipped |
+| Private account and message preparation | Builder-recorded private aggregate; public method and counts only | 15 research-qualified accounts; five message pairs (five primary, five follow-ups); zero sent |
+| Private pilot operating pack | Builder-recorded private aggregate; public artifact names only | Ready for an approved outreach run |
+
+The named account records, contact routes, source notes, scores, and message
+copy remain private. This public ledger supports the method and aggregate
+counts; it does not let a third party verify each private row or treat research
+qualification as customer validation.
+
+No external conversation, design partner, signed pilot, customer, revenue, or
+production use was created by this preparation work.
 
 ## Shipped on 2026-07-24
 
@@ -48,13 +67,18 @@ production use, independent external audit, or mainnet release.
 
 ## Next claim gate
 
-Run one concierge devnet integration with an independent Solana team. Record the
-team's prior authorization approach, time to the first successful Hedwig-gated
-state change, actor/holder mistakes, repeated account work, missing package or
-CPI surfaces, and whether the team keeps the integration.
+Secure one signed seven-day pilot with a qualified Anchor team for one real
+state-changing path across two related programs. The gate requires:
 
-Only an external artifact or a recorded first-party observation from that team
-can close this gate. The builder-owned reference consumer cannot.
+- past-behavior evidence from the team's current authorization path;
+- one manual before/after authority map;
+- a named technical owner and final-decision owner;
+- an agreed direct or CPI path; and
+- an explicit merge, revise, or reject end state.
+
+No product feature work starts before that signal. Only the signed scope and
+first-party team evidence can close this gate. A score, a draft, a polite reply,
+or the builder-owned reference consumer cannot.
 
 ## Later security work
 

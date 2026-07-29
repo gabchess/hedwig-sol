@@ -1,10 +1,11 @@
 # Hedwig
 
-**Grant roles, not keys.**
+Hedwig is shared authorization for related Anchor programs: one canonical role
+store, with each consumer still responsible for authenticating its actor.
 
-Composable onchain roles for Solana. Assign a named role to any pubkey, set
-optional membership expiry, disable the role in an incident, and let any Solana
-program verify active membership via CPI.
+Assign a named role to any pubkey, set optional membership expiry, disable the
+role in an incident, and let related Solana programs verify active membership
+through direct or CPI-safe checks.
 
 Hedwig is a devnet-stage Anchor program. The repository implements six
 instructions, a secure reference consumer, and a private TypeScript SDK alpha.
@@ -19,12 +20,11 @@ Devnet reference consumer: `52D3pTYvMwLYbiigY5xg55n4HmtEzTKCEicx1Cojzo9a`
 
 ## Why Hedwig
 
-Solana programs that need roles usually define their own account layout,
-authorization rules, expiry behavior, and revocation flow. Those implementations
-do not compose: a role recognized by one program has no standard meaning to
-another.
+Teams that maintain related Solana programs often repeat account layouts,
+authorization rules, expiry behavior, and revocation flows. Those copies can
+drift: a role recognized by one consumer has no shared meaning in another.
 
-Hedwig makes membership a small onchain primitive:
+Hedwig keeps membership in one small onchain store:
 
 - an `Org` is a role namespace;
 - a `Role` is a named authority within that org;
@@ -33,7 +33,8 @@ Hedwig makes membership a small onchain primitive:
   membership.
 
 The holder can be a wallet, multisig, program-derived identity, or agent key.
-Hedwig records membership; the consuming program decides what that role permits.
+Hedwig records membership; each consumer authenticates its actor and decides
+what that role permits.
 
 ## Current status
 
@@ -47,6 +48,7 @@ Hedwig records membership; the consuming program decides what that role permits.
 | TypeScript SDK      | Private local `0.1.0-alpha.0`; built and tested, not published                      |
 | Secure CPI consumer | Deployed at slot `478667066`; live Hedwig-gated state change verified               |
 | Upgrade authority   | Single deployer key; 2-of-3 Squads transfer planned before mainnet                  |
+| Pilot preparation   | 15 research-qualified accounts; five message pairs staged and unsent; no partner verified |
 | Network             | Devnet; mainnet is planned                                                          |
 
 See [ROADMAP.md](ROADMAP.md) for evidence-gated delivery milestones and
@@ -65,6 +67,12 @@ defines the remaining tranche. Progress is tracked through the evidence gates
 in [ROADMAP.md](ROADMAP.md) and the public
 [grant progress ledger](docs/grant-progress.md), without treating the reference
 consumer as independent adoption.
+
+The current evidence gate is one signed seven-day pilot for a real
+state-changing path across two related Anchor programs. The public
+[pilot program](docs/pilot-program.md) defines that scope. The account research
+and five message pairs (five primary messages and five follow-ups) are private,
+and all messages remain unsent.
 
 ## Instructions
 
@@ -103,8 +111,8 @@ account, so a later grant creates it again.
 the supplied role, that the role is enabled, and that the membership has not
 expired. It does **not** prove that the transaction actor controls that holder.
 
-A consuming program must authenticate the actor first—for example with a
-`Signer<'info>` for a wallet or with its own validated PDA constraints—and pass
+A consuming program must authenticate the actor first, for example with a
+`Signer<'info>` for a wallet or with its own validated PDA constraints, and pass
 that authenticated account as `holder`:
 
 ```rust
@@ -155,6 +163,8 @@ the membership lifecycle against devnet, see
 
 - [docs/architecture.md](docs/architecture.md): domain boundaries and code map
 - [docs/integration-guide.md](docs/integration-guide.md): secure CPI and local SDK use
+- [docs/pilot-program.md](docs/pilot-program.md): bounded seven-day pilot offer and limits
+- [docs/progress/2026-07-29-pilot-preparation.md](docs/progress/2026-07-29-pilot-preparation.md): public preparation record
 - [docs/grant-progress.md](docs/grant-progress.md): public delivery and evidence ledger
 - [docs/operations.md](docs/operations.md): devnet upgrade, verification, and rollback
 - [docs/audits/2026-07-24-full-audit.md](docs/audits/2026-07-24-full-audit.md): commit-pinned audit findings

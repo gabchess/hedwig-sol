@@ -4,9 +4,16 @@ Standing context for any AI coding agent working in this repo. Read this before 
 
 ## What Hedwig is
 
-Hedwig is a composable onchain roles primitive for Solana. Its account model is `Org PDA -> Role PDA -> Member PDA`. A consuming program can authenticate an actor, then CPI into `check_role` to verify that the corresponding holder has an enabled, unexpired membership.
+Hedwig is shared authorization for related Anchor programs: one canonical role
+store, with each consumer still responsible for authenticating its actor. Its
+account model is `Org PDA -> Role PDA -> Member PDA`. A consuming program can
+authenticate an actor, then CPI into `check_role` to verify that the
+corresponding holder has an enabled, unexpired membership.
 
-Framing: roles as a composable onchain primitive for organizations, usable by a person, a team, or an autonomous agent. Hedwig is an original, Solana-native program. The name is locked to "Hedwig" alone.
+Framing: shared authorization for a team that maintains two or more related
+Anchor programs. The first external proof must be one real two-program path,
+not a general DAO, agent-wallet, or vertical product. Hedwig is an original,
+Solana-native program. The name is locked to "Hedwig" alone.
 
 ## Stack
 
