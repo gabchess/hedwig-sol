@@ -4,7 +4,7 @@ Thin TypeScript helpers for using one Hedwig role store across related Anchor
 consumers. The SDK builds Hedwig's six onchain instructions; each consumer
 still authenticates the actor it passes as the role holder.
 
-Current status: private repository-local `0.1.0-alpha.0`. This package has not
+Current status: repository-local `0.1.0-alpha.0`. This package has not
 been published to npm.
 
 The package exports the fixed program ID, generated Anchor IDL type, PDA

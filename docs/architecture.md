@@ -83,30 +83,13 @@ domain layer or evidence of independent adoption.
 | `programs/hedwig_sol/src/constants.rs`  | PDA seed and account-size constants                             |
 | `programs/hedwig_sol/tests/`            | LiteSVM behavior and lifecycle tests                            |
 | `programs/hedwig_consumer/`             | Secure CPI reference consumer and negative tests                |
-| `sdk/`                                  | Private six-instruction TypeScript SDK alpha                    |
+| `sdk/`                                  | Repository-local six-instruction TypeScript SDK alpha           |
 | `app/`                                  | SDK-driven core lifecycle and live consumer-integration clients |
-| `docs/adr/`                             | Durable product and architecture decisions                      |
 | `docs/integration-guide.md`             | Actor binding, CPI, and local SDK usage                         |
 | `docs/grant-progress.md`                | Public shipped-work and claim-evidence ledger                   |
 | `docs/operations.md`                    | Devnet upgrade, verification, rollback, and incident steps      |
 | `THREAT-MODEL.md`                       | Trust boundaries and security posture                           |
 | `ROADMAP.md`                            | Evidence-gated delivery sequence                                |
 
-This is screaming architecture at the scale the program needs: files and types
-name the authorization domain, while Anchor's expected root and crate layout stay
-conventional. Extra `domain`, `service`, `manager`, or `utils` layers would add
-navigation without clarifying the current six-action core.
-
-## Change rules
-
-- Name new state with domain nouns and new instructions with domain verbs.
-- Keep one instruction per file while the surface remains small.
-- Put shared code in a generic module only after repeated use proves the need.
-- Keep framework and deployment concerns at the repository shell.
-- Record durable scope or architecture changes in [the ADR index](adr/index.md).
-- Keep roadmap status out of architecture documents; architecture describes the
-  current system.
-
-The governing decisions are recorded in [docs/adr/](adr/index.md). Integration
-risks, especially holder authentication and upgrade authority, belong in
-[THREAT-MODEL.md](../THREAT-MODEL.md), not in this code map.
+Integration risks, especially holder authentication and upgrade authority,
+belong in [THREAT-MODEL.md](../THREAT-MODEL.md), not in this code map.

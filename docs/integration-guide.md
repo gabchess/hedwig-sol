@@ -55,7 +55,7 @@ caller controls it.
 
 ## TypeScript SDK
 
-The private `@hedwig-sol/sdk` alpha exports:
+The repository-local `@hedwig-sol/sdk` alpha exports:
 
 - fixed program ID and generated IDL types;
 - org, role, and member PDA helpers;

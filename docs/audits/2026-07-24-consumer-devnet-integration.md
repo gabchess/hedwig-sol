@@ -81,4 +81,5 @@ The final read proved:
 This proof closes the gap between local CPI tests and a live devnet
 state-changing integration. It does not show that another team can integrate
 Hedwig without builder help, that a team will keep the integration, or that
-there is recurring or paid demand. Those remain the next Sonda evidence gate.
+there is recurring or paid demand. Those remain the next customer-validation
+gate.

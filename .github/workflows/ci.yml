@@ -14,6 +14,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
+      - name: Test public repository boundary
+        run: bash scripts/test-public-boundary.sh
+
+      - name: Check public repository boundary
+        run: bash scripts/check-public-boundary.sh
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
         with:
