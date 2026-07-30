@@ -21,7 +21,7 @@ The first acquisition artifact is a manual authority map. It compares the team's
 
 The first team:
 
-- maintains at least two related Anchor programs or one real direct/CPI authorization path;
+- maintains at least two related Anchor programs with one real direct/CPI authorization path spanning them;
 - repeats or splits authority logic across that path;
 - has an audit, launch, migration, or material release within about eight weeks;
 - has a technical owner who can make a merge decision in one sprint; and
@@ -71,7 +71,7 @@ Hedwig provides:
 1. a map of the current actors, authority accounts, constraints, CPI edges, administrators, and upgrade authorities;
 2. the smallest proposed Hedwig-backed path;
 3. scoped and expiring membership where the current product supports it;
-4. a multisig custody dry-run plan;
+4. a multisig custody dry-run record that proves the signer and proposal path;
 5. migration and rollback steps; and
 6. a merge, revise, or reject recommendation.
 

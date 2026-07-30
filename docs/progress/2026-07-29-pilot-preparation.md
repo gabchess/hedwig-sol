@@ -1,5 +1,7 @@
 # Founder-led pilot preparation
 
+Status: in progress
+
 Date: 2026-07-29
 
 ## Decision
@@ -21,21 +23,22 @@ The private account screen uses a fixed 100-point rubric:
 
 | Dimension | Points |
 | --- | ---: |
-| Two-program or direct/CPI architecture fit | 30 |
+| Two-program direct/CPI path fit | 30 |
 | Public pain evidence | 25 |
 | Current timing signal | 20 |
 | Reachable technical owner | 15 |
 | Seven-day tractability | 10 |
 
 Unknown facts score zero. Public code supports a hypothesis, not proof of pain.
-Candidates fail the screen when they lack Anchor source; have neither two
-related Anchor programs nor one clear direct/CPI authorization path; or lack a
-public authority surface, a reachable owner, timing evidence, or fit with
-Hedwig's current six-instruction core.
+The exact scores remain provisional until their evidence review is complete.
+Candidates fail the screen when they lack Anchor source, two related Anchor
+programs with one clear direct/CPI authorization path spanning them, a public
+authority surface, a reachable owner, timing evidence, or fit with Hedwig's
+current six-instruction core.
 
 ## Prepared output
 
-- 15 research-qualified accounts scored from public primary sources
+- 15 sourced prospect records pending exact-score and qualification review
 - five detailed research cards
 - five message pairs (five primary messages and five follow-ups), all under
   500 characters
@@ -67,7 +70,7 @@ before send.
 
 ## Authority gates
 
-- Outreach: denied until the project owner approves each recipient, channel, and exact copy.
+- Outreach: denied until qualification review passes and the project owner approves each recipient, channel, and exact copy.
 - SDK publication: not approved.
 - Deployment or upgrade-authority change: not approved.
 - Colosseum Eternal stopwatch: `NOT STARTED`.
@@ -92,7 +95,9 @@ message at or above 500 characters, and no whitespace errors.
 Source review rejected two initial top-five hypotheses because they joined
 different actors or instructions into one path. Those records moved to hold;
 two candidates with directly cited state-changing CPI authorization paths
-replaced them. One non-Anchor record also left the qualified account set.
+replaced them. One non-Anchor record also left the research set. The exact-score
+review remains open, so none of the 15 records is currently labeled
+research-qualified.
 
 Repository verification also passed:
 
@@ -105,14 +110,13 @@ Repository verification also passed:
 - private-name, secret-shape, claim, and whitespace scans; and
 - a branch diff check confirming no product-code or deployment change.
 
-Final evidence, standards, and security reviews reported no unresolved P0,
-P1, or P2 finding.
-
-The pull request will bind the final review result to its merged revision
-without exposing the private prospect pack.
+A retrospective fixed-SHA review found qualification-claim and pilot-scope
+mismatches. This follow-up records the corrected public state without exposing
+the private prospect pack.
 
 ## Next decision
 
-The project owner can approve, revise, or hold the five staged message pairs.
-Approval of one pair does not approve the other four, start the Eternal timer,
-publish the SDK, deploy code, or change custody.
+The next decision is completing the exact-score and qualification review. The
+project owner can then approve, revise, or hold only the staged message pairs
+whose prospect records pass. Approval of one pair does not approve the other
+four, start the Eternal timer, publish the SDK, deploy code, or change custody.

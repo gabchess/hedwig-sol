@@ -44,7 +44,7 @@ Preparation does not count as customer validation. No public document may claim 
 
 A qualified account should meet all five conditions:
 
-1. It maintains at least two related Anchor programs or one clear direct/CPI authorization path.
+1. It maintains at least two related Anchor programs with one clear direct/CPI authorization path spanning them.
 2. Public code or documentation suggests duplicated, fragmented, or migration-sensitive authority logic.
 3. A public signal points to an audit, launch, migration, or material release within about eight weeks.
 4. A technical owner is reachable and appears able to approve an integration in one sprint.
@@ -56,7 +56,7 @@ Disqualify an account when the evidence shows a single unrelated program, no Anc
 
 | Dimension | Points | Evidence |
 | --- | ---: | --- |
-| Architecture fit | 30 | Two related programs, direct/CPI path, or shared operator boundary |
+| Architecture fit | 30 | Two related programs with one direct/CPI path spanning their shared operator boundary |
 | Pain evidence | 25 | Repeated checks, separate authority stores, manual migration, or incident-sensitive revocation |
 | Timing | 20 | Audit, launch, migration, active build cycle, or current authorization work |
 | Buyer access | 15 | Named maintainer, founder, security lead, or senior protocol engineer with an active profile |

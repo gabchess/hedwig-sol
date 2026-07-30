@@ -90,13 +90,13 @@ roadmap remains the decision record.
 
 ### Founder-led pilot preparation
 
-The 2026-07-29 preparation stage shipped:
+The 2026-07-29 preparation stage is in progress. It has produced:
 
 - the [seven-day pilot offer](docs/pilot-program.md);
 - an approved [design](docs/superpowers/specs/2026-07-29-founder-led-pilot-preparation-design.md)
   and [implementation plan](docs/superpowers/plans/2026-07-29-founder-led-pilot-preparation.md);
 - a fixed 30/25/20/15/10 qualification rubric;
-- 15 research-qualified accounts and five personalized message pairs (five
+- 15 sourced prospect records pending qualification review and five personalized message pairs (five
   primary messages and five follow-ups) in the private project vault;
 - a private authority-map interview, pilot memo, multisig worksheet, SDK
   release checklist, outreach ledger, and Colosseum Eternal gate; and
@@ -106,11 +106,16 @@ The 2026-07-29 preparation stage shipped:
 No message has been sent. No external conversation, design partner, customer,
 signed pilot, revenue, or production use has been verified.
 
-## Next evidence gate: one signed seven-day pilot
+## Next evidence gate: qualify the outreach list, then sign one seven-day pilot
+
+Before recipient approval, every exact score must trace to cited evidence, every
+unknown must score zero, and the selected five records must pass the full
+qualification gate with scores of at least 70.
 
 The next product question is whether one qualified Anchor team will expose a
 real state-changing path across two related programs and sign a bounded pilot.
-Subject to separate recipient, channel, and copy approval:
+After qualification review, each recipient, channel, and exact message still
+needs separate approval:
 
 - verify the technical owner and current release timing;
 - send one approved message on one approved channel;
