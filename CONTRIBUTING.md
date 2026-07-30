@@ -29,11 +29,10 @@ install policy is resolved.
 - Program source: `programs/hedwig_sol/src/`
 - Program tests: `programs/hedwig_sol/tests/`
 - Secure consumer and tests: `programs/hedwig_consumer/`
-- Private TypeScript SDK alpha: `sdk/`
+- Repository-local TypeScript SDK alpha: `sdk/`
 - SDK-driven devnet demo: `app/demo.ts`
 - Integration guide: `docs/integration-guide.md`
 - Architecture map: `docs/architecture.md`
-- Active decisions: `docs/adr/index.md`
 - Threat model and known risks: `THREAT-MODEL.md`
 - Roadmap: `ROADMAP.md`
 
@@ -47,6 +46,22 @@ install policy is resolved.
 - Keep unfinished work in docs or issues, not as TODO/FIXME stubs in source.
 - Update README, roadmap, and threat-model claims together when a change affects shipped status, risks, or public guarantees.
 
+## Public repository boundary
+
+Keep this repository useful to an external reader. Product behavior,
+integration guidance, security and deployment evidence, current roadmap status,
+and grant delivery records belong here.
+
+Keep private operating instructions, assistant configuration, planning
+workflows, approval records, prospect work, and unpublished review provenance
+outside this repository. Every proper name, link, and status claim must make
+sense without access to a maintainer's local environment. Public grant,
+adoption, deployment, and security claims must link to public evidence.
+
+Run `yarn public:check` before opening a pull request.
+
 ## Pull request bar
 
-A useful PR says what changed, why it matters, and which check proves it. If the change touches authorization, include at least one negative test for the failure path.
+A useful PR says what changed, why it matters, and which check proves it. If the
+change touches authorization, include at least one negative test for the failure
+path. Confirm that the public repository boundary still holds.

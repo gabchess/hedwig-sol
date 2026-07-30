@@ -79,12 +79,16 @@ A public name, quote, or case study needs separate consent.
 
 ## Current product limits
 
-Hedwig is a devnet-stage six-instruction program. Its private TypeScript SDK alpha is tested but not published. The live reference consumer is maintained by the Hedwig builder, so it proves the integration path rather than external adoption.
+Hedwig is a devnet-stage six-instruction program. Its repository-local
+TypeScript SDK alpha is tested but not published. The live reference consumer
+is maintained by the Hedwig builder, so it proves the integration path rather
+than external adoption.
 
 Hedwig has no verified design partner, customer, revenue, production use, independent external audit, or mainnet release. The single-key program upgrade authority remains a mainnet blocker.
 
 ## Current status
 
-Pilot preparation is active. No outreach has been sent and no design partner has been verified.
-
-The qualification method and approval gates are recorded in the [founder-led pilot design](superpowers/specs/2026-07-29-founder-led-pilot-preparation-design.md). Current program evidence remains in the [grant progress ledger](grant-progress.md) and [roadmap](../ROADMAP.md).
+The offer is published. No team has signed the pilot, and no design partner,
+customer, or external adoption has been verified. Current program evidence
+remains in the [grant progress ledger](grant-progress.md) and
+[roadmap](../ROADMAP.md).

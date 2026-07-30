@@ -8,7 +8,8 @@ role in an incident, and let related Solana programs verify active membership
 through direct or CPI-safe checks.
 
 Hedwig is a devnet-stage Anchor program. The repository implements six
-instructions, a secure reference consumer, and a private TypeScript SDK alpha.
+instructions, a secure reference consumer, and a repository-local TypeScript
+SDK alpha.
 The local suites contain 40 LiteSVM integration tests and 27 SDK tests. The
 reviewed core and consumer are both live on devnet. On 2026-07-24, the SDK
 completed the six-instruction lifecycle and an authenticated member changed
@@ -45,10 +46,10 @@ what that role permits.
 | TypeScript tests    | 27 SDK tests plus SDK and app typechecks                                            |
 | Devnet evidence     | Upgrade verified at slot `478655638`; six-instruction lifecycle finalized afterward |
 | Circuit breaker     | Live `enabled=false` state verified on devnet                                       |
-| TypeScript SDK      | Private local `0.1.0-alpha.0`; built and tested, not published                      |
+| TypeScript SDK      | Repository-local `0.1.0-alpha.0`; built and tested, not published                   |
 | Secure CPI consumer | Deployed at slot `478667066`; live Hedwig-gated state change verified               |
 | Upgrade authority   | Single deployer key; 2-of-3 Squads transfer planned before mainnet                  |
-| Pilot preparation   | In progress; 15 sourced prospect records pending qualification review; five message pairs staged and unsent |
+| Pilot validation    | Offer published; no signed pilot or external adoption                               |
 | Network             | Devnet; mainnet is planned                                                          |
 
 See [ROADMAP.md](ROADMAP.md) for evidence-gated delivery milestones and
@@ -62,18 +63,18 @@ See the
 [promotion record](docs/audits/2026-07-24-devnet-promotion.md) for the
 transaction, loader-padding proof, and six lifecycle signatures.
 
-The project received USDG 1,500 from a USDG 3,000 grant. No written checklist
-defines the remaining tranche. Progress is tracked through the evidence gates
-in [ROADMAP.md](ROADMAP.md) and the public
+The project received USDG 1,500 from a USDG 3,000 grant. The maintainer reports
+that the authenticated portal exposes a final-tranche request form and the
+grant program's general completion policy. This portal state is not publicly
+verifiable, and no project-specific milestone or KPI text was found. Progress
+is tracked through the evidence gates in [ROADMAP.md](ROADMAP.md) and the public
 [grant progress ledger](docs/grant-progress.md), without treating the reference
 consumer as independent adoption.
 
-The immediate prerequisite is an exact-score and qualification review of the 15
-private prospect records. No recipient can be approved before that review
-passes. The next product evidence gate is one signed seven-day pilot for a real
+The next product evidence gate is one signed seven-day pilot for a real
 state-changing path across two related Anchor programs. The public
-[pilot program](docs/pilot-program.md) defines that scope. The five message
-pairs (five primary messages and five follow-ups) remain private and unsent.
+[pilot program](docs/pilot-program.md) defines the offer and its limits. No
+signed pilot, design partner, customer, or external adoption has been verified.
 
 ## Instructions
 
@@ -168,14 +169,12 @@ the membership lifecycle against devnet, see
 - [docs/progress/2026-07-29-pilot-preparation.md](docs/progress/2026-07-29-pilot-preparation.md): public preparation record
 - [docs/grant-progress.md](docs/grant-progress.md): public delivery and evidence ledger
 - [docs/operations.md](docs/operations.md): devnet upgrade, verification, and rollback
-- [docs/audits/2026-07-24-full-audit.md](docs/audits/2026-07-24-full-audit.md): commit-pinned audit findings
+- [docs/audits/2026-07-24-full-audit.md](docs/audits/2026-07-24-full-audit.md): commit-pinned AI-assisted review findings
 - [docs/audits/2026-07-24-devnet-promotion.md](docs/audits/2026-07-24-devnet-promotion.md): live deployment and lifecycle proof
 - [docs/audits/2026-07-24-consumer-devnet-integration.md](docs/audits/2026-07-24-consumer-devnet-integration.md): live CPI consumer proof
-- [docs/adr/index.md](docs/adr/index.md): durable product and architecture decisions
 - [THREAT-MODEL.md](THREAT-MODEL.md): assets, trust boundaries, and open risks
 - [SECURITY.md](SECURITY.md): private vulnerability reporting
 - [ROADMAP.md](ROADMAP.md): shipped evidence and remaining milestones
-- [docs/sdk-rfc.md](docs/sdk-rfc.md): historical SDK design record
 - [CONTRIBUTING.md](CONTRIBUTING.md): contributor workflow and verification gates
 
 ## License

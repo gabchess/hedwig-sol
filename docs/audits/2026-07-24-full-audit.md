@@ -4,7 +4,8 @@ Date: 2026-07-24
 
 Reviewed source: `5d157c9d2bfc52060c513ff39ed53effc301e2eb`
 
-This is an AI-assisted review, not an independent human security audit or a
+This is an AI-assisted structured security and code review. Hedwig has not
+completed an independent human security audit, and this record does not
 guarantee that the code has no defects.
 
 Deployment note: the reviewed consumer was assigned its generated deploy ID,
@@ -15,9 +16,9 @@ alignment. Its exact-byte and live CPI proof is recorded in
 
 ## Verdict
 
-No Critical or High program-code flaw remains in the reviewed source. The
-fixed-ID devnet upgrade, deployed-byte identity check, unchanged-authority
-check, and live six-instruction demo passed on 2026-07-24.
+The review found no unresolved Critical or High program-code flaw in the
+reviewed source. The fixed-ID devnet upgrade, deployed-byte identity check,
+unchanged-authority check, and live six-instruction demo passed on 2026-07-24.
 
 Hedwig is not ready for mainnet. The live upgrade authority is one local signer,
 and `main` has no GitHub branch protection. Mainnet needs governed upgrade
@@ -28,15 +29,15 @@ separate release review.
 
 - The six Anchor instructions and all Org, Role, and Member account constraints
 - The secure consumer CPI and its signer-to-holder boundary
-- The private TypeScript SDK and SDK-driven demo
+- The repository-local TypeScript SDK and SDK-driven demo
 - Rust, LiteSVM, TypeScript, build, CI, dependency, and deployment paths
 - Public status, integration, roadmap, operations, and security claims
-- All 949 applicable or feature-screened controls from the installed
-  `solanabr/auditor-skill` checklists
+- Structured controls for Solana and Anchor program security, release practice,
+  dependencies, deployment, and public claims
 
 At the audit checkpoint, the reference consumer was local proof code. It was
 later deployed to devnet and remains builder-owned evidence, not independent
-adoption. The SDK is a private repository alpha and is not published to npm.
+adoption. The SDK is a repository-local alpha and is not published to npm.
 
 ## Evidence
 
@@ -59,26 +60,12 @@ adoption. The SDK is a private repository alpha and is not published to npm.
 - The live SDK demo finalized all six instruction transactions, fetched the
   disabled Role as `enabled=false`, and found the revoked Member PDA closed.
 
-The commit-pinned item record is in
-[`2026-07-24-checklist-matrix.md`](./2026-07-24-checklist-matrix.md).
-
 ## Checklist result
 
-The 949 rows contain:
-
-| Verdict     | Count |
-| ----------- | ----: |
-| PASS        |   248 |
-| FAIL        |    69 |
-| PARTIAL     |    60 |
-| UNCONFIRMED |    16 |
-| N/A         |   556 |
-| PENDING     |     0 |
-
-A checklist `FAIL` is not the same as a vulnerability. Most failed controls ask
-for mainnet governance, formal methods, fuzzing, automated monitoring, release
-automation, compliance process, or features that this devnet primitive does not
-yet provide. Findings below rank the concrete risks that affect this release.
+The structured review classified the applicable controls and converted the
+release-relevant gaps into the findings below. Mainnet governance, formal
+methods, fuzzing, automated monitoring, release automation, and compliance
+process remain outside the verified devnet release.
 
 ## Findings
 
@@ -143,11 +130,10 @@ treasury logic. The consumer proves the important integration rule: authenticate
 the actor in the consuming program, then pass that same signer as Hedwig's
 holder.
 
-The review rejected hierarchy, badges, claimable roles, spending limits,
-indexing, Rust CPI helpers, and agent-specific state for this slice. Those
-features need integration evidence first. The next product step is one
-independent devnet integration and measured setup friction, not a larger core
-protocol.
+Hierarchy, badges, claimable roles, spending limits, indexing, Rust CPI helpers,
+and other extensions remain outside this release. Those features need
+integration evidence first. The next product step is one external devnet
+integration with measured setup friction.
 
 ## Residual assurance work
 

@@ -11,7 +11,10 @@ governance, then consider mainnet.
 - Total grant: USDG 3,000.
 - Received: USDG 1,500.
 - Remaining: USDG 1,500.
-- No written portal milestone or second-tranche checklist has been provided.
+- The maintainer reports that the authenticated portal exposes a final-tranche
+  request form and the grant program's general completion policy.
+- This portal state is not publicly verifiable, and no project-specific
+  milestone or KPI text was found.
 
 The working rule is therefore to keep shipping verifiable roadmap progress.
 Grant amounts are funding facts, not evidence that a milestone or adoption
@@ -55,7 +58,7 @@ builder and does not count as independent use.
 
 ### TypeScript SDK alpha
 
-The private repository-local `@hedwig-sol/sdk` alpha contains typed PDA helpers,
+The repository-local `@hedwig-sol/sdk` alpha contains typed PDA helpers,
 argument validation, generated IDL types, and build/send pairs for all six
 instructions. The demo imports this package instead of rebuilding raw Anchor
 calls. Its suite contains 27 tests.
@@ -63,13 +66,12 @@ calls. Its suite contains 27 tests.
 **State:** built and tested locally as `0.1.0-alpha.0`. It is not published to
 npm.
 
-### Audit and devnet promotion
+### Review and devnet promotion
 
 The release gate covered the core, consumer, SDK, demo, CI, docs, and deployment
 process at one commit. The 2026-07-24 promotion proved:
 
 - no unresolved Critical or High code finding that applies to devnet;
-- all 949 audit checks classified with zero pending rows;
 - the consumer built first and Hedwig built last;
 - the deployment command pinned to the fixed program ID;
 - the compiled ELF matched every deployed code byte, with only zero-filled
@@ -79,7 +81,7 @@ process at one commit. The 2026-07-24 promotion proved:
 
 The single-key upgrade authority remains a named mainnet blocker. It does not
 invalidate the completed devnet-only upgrade. See the
-[audit](docs/audits/2026-07-24-full-audit.md) and
+[review](docs/audits/2026-07-24-full-audit.md) and
 [core promotion record](docs/audits/2026-07-24-devnet-promotion.md). The
 [consumer promotion record](docs/audits/2026-07-24-consumer-devnet-integration.md)
 contains its deployment and CPI transaction evidence.
@@ -90,44 +92,32 @@ roadmap remains the decision record.
 
 ### Founder-led pilot preparation
 
-The 2026-07-29 preparation stage is in progress. It has produced:
+The [seven-day pilot offer](docs/pilot-program.md) defines one bounded
+two-program authorization path, a manual before-and-after authority map, a
+custody dry run, migration and rollback steps, and a merge, revise, or reject
+decision. The public
+[preparation record](docs/progress/2026-07-29-pilot-preparation.md) records the
+claim boundary.
 
-- the [seven-day pilot offer](docs/pilot-program.md);
-- an approved [design](docs/superpowers/specs/2026-07-29-founder-led-pilot-preparation-design.md)
-  and [implementation plan](docs/superpowers/plans/2026-07-29-founder-led-pilot-preparation.md);
-- a fixed 30/25/20/15/10 qualification rubric;
-- 15 sourced prospect records pending qualification review and five personalized message pairs (five
-  primary messages and five follow-ups) in the private project vault;
-- a private authority-map interview, pilot memo, multisig worksheet, SDK
-  release checklist, outreach ledger, and Colosseum Eternal gate; and
-- the public
-  [preparation record](docs/progress/2026-07-29-pilot-preparation.md).
+No signed pilot, design partner, customer, revenue, production use, or external
+adoption has been verified.
 
-No message has been sent. No external conversation, design partner, customer,
-signed pilot, revenue, or production use has been verified.
-
-## Next evidence gate: qualify the outreach list, then sign one seven-day pilot
-
-Before recipient approval, every exact score must trace to cited evidence, every
-unknown must score zero, and the selected five records must pass the full
-qualification gate with scores of at least 70.
+## Next evidence gate: sign one seven-day pilot
 
 The next product question is whether one qualified Anchor team will expose a
-real state-changing path across two related programs and sign a bounded pilot.
-After qualification review, each recipient, channel, and exact message still
-needs separate approval:
+real state-changing path across two related programs and sign the bounded
+pilot. The pilot must:
 
 - verify the technical owner and current release timing;
-- send one approved message on one approved channel;
 - interview past authorization behavior before presenting Hedwig;
 - produce one manual before/after authority map;
 - sign a seven-day scope for one two-program direct or CPI path; and
 - end with an explicit merge, revise, or reject decision.
 
 Do not add product features before this signal. If no qualified team signs
-after the first approved outreach week, stop feature work, record the rejection
-reasons, and review the product thesis. SDK publication, deployment, custody
-changes, and the Colosseum timer remain separate decisions.
+after one week of pilot validation, stop feature work, record the rejection
+reasons, and review the product thesis. SDK publication, deployment, and
+custody changes remain separate decisions.
 
 The signed scope is the demand signal. The later integration is technical
 evidence, not a customer-success claim by default.
@@ -140,30 +130,6 @@ Expand from the signed pilot only if the signal is useful. Three independent
 teams must publish or link reproducible devnet integration evidence. Builder
 fixtures and the reference consumer do not count.
 
-### Agent runtime egress hardening
-
-Pilot [Hermes Agent's IronProxy](https://hermes-agent.nousresearch.com/docs/user-guide/egress/iron-proxy)
-for one Docker-sandboxed Hedwig/Estaleiro workflow after the first signed pilot
-and integration proof. This belongs to the offchain agent runtime, not the
-Hedwig program or authorization model. Its
-[implementation notes](https://hermes-agent.nousresearch.com/docs/developer-guide/egress-internals)
-define the security-sensitive lifecycle and current backend limits.
-
-The pilot must:
-
-- use one supported provider and a host allowlist;
-- expose only proxy tokens inside the container, not the real provider secret;
-- deny private, link-local, and metadata-service destinations;
-- fail closed if the proxy, CA, mapping, or audit stream is unavailable;
-- preserve a request log without secret values; and
-- document bypass limits, including raw sockets, host compromise, allowlisted
-  exfiltration, and unsupported signature-based credentials.
-
-Adopt it only if the Docker proof passes and the operational burden is
-acceptable. Hermes currently wires IronProxy to Docker, not every terminal
-backend. This work hardens builder credentials; it is not evidence of Hedwig
-adoption and does not block the signed-pilot gate.
-
 ### Governed upgrade authority
 
 Move the devnet program upgrade authority from the deployer key to a 2-of-3
@@ -175,11 +141,11 @@ Build a Squads-compatible proposal guard, or another production-bound consumer
 supported by observed demand, only after integration evidence establishes the
 right target. It must authenticate its actor before checking a role.
 
-### External security review and hosted docs
+### External human security review and hosted docs
 
-Publish an independent review of a stable candidate with scope, commit, findings,
-and remediation status. Hosted docs may mirror the repository, which remains
-canonical.
+Publish a human security review of a stable candidate with scope, commit,
+findings, and remediation status. Hosted docs may mirror the repository, which
+remains canonical.
 
 ### Mainnet
 
@@ -199,6 +165,6 @@ delegation, instruction allowlists, spending caps, an agent control surface, an
 indexer dashboard, or a standalone Rust CPI crate because they sound useful.
 Build one only when observed integrations expose the missing primitive.
 
-The durable architecture decisions live in [`docs/adr/`](docs/adr/index.md).
-Status claims must link to tests, audit evidence, deployment output, or external
-artifacts.
+The current architecture is documented in
+[`docs/architecture.md`](docs/architecture.md). Status claims must link to
+tests, review evidence, deployment output, or external artifacts.
