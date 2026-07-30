@@ -48,7 +48,7 @@ what that role permits.
 | TypeScript SDK      | Private local `0.1.0-alpha.0`; built and tested, not published                      |
 | Secure CPI consumer | Deployed at slot `478667066`; live Hedwig-gated state change verified               |
 | Upgrade authority   | Single deployer key; 2-of-3 Squads transfer planned before mainnet                  |
-| Pilot preparation   | 15 research-qualified accounts; five message pairs staged and unsent; no partner verified |
+| Pilot preparation   | In progress; 15 sourced prospect records pending qualification review; five message pairs staged and unsent |
 | Network             | Devnet; mainnet is planned                                                          |
 
 See [ROADMAP.md](ROADMAP.md) for evidence-gated delivery milestones and
@@ -68,11 +68,12 @@ in [ROADMAP.md](ROADMAP.md) and the public
 [grant progress ledger](docs/grant-progress.md), without treating the reference
 consumer as independent adoption.
 
-The current evidence gate is one signed seven-day pilot for a real
+The immediate prerequisite is an exact-score and qualification review of the 15
+private prospect records. No recipient can be approved before that review
+passes. The next product evidence gate is one signed seven-day pilot for a real
 state-changing path across two related Anchor programs. The public
-[pilot program](docs/pilot-program.md) defines that scope. The account research
-and five message pairs (five primary messages and five follow-ups) are private,
-and all messages remain unsent.
+[pilot program](docs/pilot-program.md) defines that scope. The five message
+pairs (five primary messages and five follow-ups) remain private and unsent.
 
 ## Instructions
 

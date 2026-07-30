@@ -13,15 +13,18 @@ exists.
 Public delivery review:
 [`#3: Ship secure consumer integration and grant evidence`](https://github.com/gabchess/hedwig-sol/pull/3)
 
-## Shipped on 2026-07-29
+Pilot preparation review:
+[`#4: Prepare founder-led pilot validation`](https://github.com/gabchess/hedwig-sol/pull/4)
+
+## Preparation work started on 2026-07-29
 
 | Delivery | Public evidence | State |
 | --- | --- | --- |
 | Narrow founder-led pilot decision | [pilot program](pilot-program.md), [design](superpowers/specs/2026-07-29-founder-led-pilot-preparation-design.md) | Shipped |
 | Dependency-aware preparation plan | [implementation plan](superpowers/plans/2026-07-29-founder-led-pilot-preparation.md) | Shipped |
 | Public preparation and claim record | [pilot preparation record](progress/2026-07-29-pilot-preparation.md), [roadmap](../ROADMAP.md) | Shipped |
-| Private account and message preparation | Builder-recorded private aggregate; public method and counts only | 15 research-qualified accounts; five message pairs (five primary, five follow-ups); zero sent |
-| Private pilot operating pack | Builder-recorded private aggregate; public artifact names only | Ready for an approved outreach run |
+| Private account and message preparation | Builder-recorded private aggregate; public method and counts only | In progress; 15 sourced prospect records pending qualification review; five message pairs (five primary, five follow-ups); zero sent |
+| Private pilot operating pack | Builder-recorded private aggregate; public artifact names only | Ready; outreach remains blocked on qualification review and separate approval |
 
 The named account records, contact routes, source notes, scores, and message
 copy remain private. This public ledger supports the method and aggregate

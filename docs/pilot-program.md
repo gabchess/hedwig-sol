@@ -8,10 +8,10 @@ This is a free, seven-day pilot for one qualified Solana team. It ends with a me
 
 The pilot fits a team that:
 
-- maintains at least two related Anchor programs or a real direct/CPI authorization path;
+- maintains at least two related Anchor programs with a real direct/CPI authorization path spanning them;
 - repeats or splits authority logic across that path;
 - has an audit, launch, migration, or material release within about eight weeks; and
-- has a technical owner who can review an integration in one sprint.
+- has a technical owner who can approve an integration in one sprint.
 
 A standalone program with no shared authorization path is not a fit. Neither is a path that needs an unbuilt Hedwig feature.
 
@@ -37,15 +37,16 @@ The consumer keeps responsibility for actor authentication. A Hedwig membership 
 
 ### 3. Test the operational edge
 
-Where the selected path needs it, the pilot covers:
+The pilot executes a Squads custody dry run that proves the signer and proposal
+path. It documents migration order and rollback.
+
+Where the selected path needs it, the pilot also covers:
 
 - membership expiry;
 - role disable and revocation behavior;
-- migration order and rollback;
-- audit-readable before/after state; and
-- a Squads custody dry-run plan.
+- audit-readable before/after state.
 
-Multisig compatibility remains a test until a real proposal path proves the signer behavior.
+The pilot records multisig compatibility only after the dry run proves the signer and proposal behavior.
 
 ### 4. Make the decision
 
@@ -63,7 +64,7 @@ Rejection is a valid result. The point is to learn whether the current primitive
 - the proposed authority map;
 - migration and rollback steps;
 - integration support for the selected path;
-- a custody feasibility plan; and
+- a custody dry-run record; and
 - the final merge, revise, or reject recommendation.
 
 ## What the team provides
