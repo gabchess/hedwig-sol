@@ -66,6 +66,10 @@ add_text_file ".devcontainer/devcontainer.json" "{}"
 add_text_file ".vscode/settings.json" "{}"
 expect_pass "approved public configuration files"
 
+new_case_repository
+add_text_file "evals/runner.js" "'use strict';"
+expect_pass "public JavaScript eval runner"
+
 for rejected_path in \
   "docs/.workspace/private.md" \
   ".github/workflows/internal/private.yml" \

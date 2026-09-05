@@ -56,7 +56,7 @@ while IFS= read -r -d '' tracked_path; do
   esac
 
   case "$tracked_path" in
-    *.json | *.lock | *.md | *.rs | *.sh | *.toml | *.ts | *.yaml | *.yml | .gitignore | .prettierignore | LICENSE)
+    *.js | *.json | *.lock | *.md | *.rs | *.sh | *.toml | *.ts | *.yaml | *.yml | .gitignore | .prettierignore | LICENSE)
       ;;
     *)
       printf 'public-boundary: unreviewed tracked file type: %s\n' \
