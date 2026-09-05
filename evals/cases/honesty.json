@@ -42,6 +42,36 @@
           "live on mainnet",
           "verified customer adoption"
         ]
+      },
+      {
+        "type": "excludesPatterns",
+        "paths": [
+          "README.md",
+          "ROADMAP.md",
+          "SECURITY.md",
+          "THREAT-MODEL.md",
+          "app/README.md",
+          "sdk/README.md",
+          "docs/architecture.md",
+          "docs/grant-progress.md",
+          "docs/integration-guide.md",
+          "docs/operations.md",
+          "docs/pilot-program.md",
+          "docs/progress/2026-07-29-pilot-preparation.md",
+          "docs/audits/2026-07-24-consumer-devnet-integration.md",
+          "docs/audits/2026-07-24-devnet-promotion.md",
+          "docs/audits/2026-07-24-full-audit.md"
+        ],
+        "patterns": [
+          "\\b(?:is|now|currently)\\s+(?:fully\\s+)?mainnet[- ]ready\\b",
+          "\\b(?:is|now|currently)\\s+ready\\s+for\\s+mainnet\\b",
+          "\\b(?:is|now|currently)\\s+(?:fully\\s+)?production[- ]ready\\b",
+          "\\b(?:is|now|currently)\\s+ready\\s+for\\s+production\\b",
+          "\\b(?:is|has been|was)\\s+(?:independently\\s+|externally\\s+)?audited\\b",
+          "\\bguarante(?:ed|es)\\s+(?:security|safety)\\b",
+          "\\bverified\\s+(?:customer|external)\\s+adoption\\b",
+          "\\blive\\s+production\\s+(?:spend|spending|funds|path)\\b"
+        ]
       }
     ]
   },
@@ -132,22 +162,39 @@
         ]
       },
       {
-        "type": "exportsInclude",
-        "language": "typescript",
+        "type": "typescriptExportsEqual",
         "path": "sdk/src/index.ts",
         "expected": [
-          "buildCreateOrgInstruction",
-          "sendCreateOrg",
-          "buildCreateRoleInstruction",
-          "sendCreateRole",
+          "AssignRoleInput",
+          "CheckRoleInput",
+          "CreateOrgInput",
+          "CreateRoleInput",
+          "ExpiresAtInput",
+          "HEDWIG_PROGRAM_ID",
+          "HedwigSol",
+          "NO_EXPIRY",
+          "RevokeRoleInput",
+          "SendInstructionOptions",
+          "SetRoleEnabledInput",
+          "assertOrgName",
+          "assertRoleName",
           "buildAssignRoleInstruction",
-          "sendAssignRole",
           "buildCheckRoleInstruction",
-          "sendCheckRole",
+          "buildCreateOrgInstruction",
+          "buildCreateRoleInstruction",
           "buildRevokeRoleInstruction",
-          "sendRevokeRole",
           "buildSetRoleEnabledInstruction",
-          "sendSetRoleEnabled"
+          "createHedwigProgram",
+          "deriveMemberPda",
+          "deriveOrgPda",
+          "deriveRolePda",
+          "sendAssignRole",
+          "sendCheckRole",
+          "sendCreateOrg",
+          "sendCreateRole",
+          "sendRevokeRole",
+          "sendSetRoleEnabled",
+          "toExpiresAt"
         ]
       },
       {

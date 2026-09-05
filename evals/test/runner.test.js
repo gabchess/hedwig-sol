@@ -1,5 +1,7 @@
 const assert = require("node:assert/strict");
 const { spawnSync } = require("node:child_process");
+const fs = require("node:fs");
+const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
 
@@ -108,4 +110,42 @@ test("CLI defaults to offline and judge mode skips without a key", () => {
   });
   assert.equal(judge.status, 0, judge.stderr);
   assert.equal(JSON.parse(judge.stdout).judge.status, "skipped");
+});
+
+test("pattern assertions reject equivalent production overclaims", () => {
+  const { evaluateAssertion } = loadRunner();
+  const fixtureRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), "hedwig-honesty-eval-"),
+  );
+  fs.writeFileSync(
+    path.join(fixtureRoot, "copy.md"),
+    "Hedwig is ready for production.",
+  );
+
+  const result = evaluateAssertion(
+    {
+      type: "excludesPatterns",
+      paths: ["copy.md"],
+      patterns: ["\\bready\\s+for\\s+production\\b"],
+    },
+    fixtureRoot,
+  );
+
+  assert.equal(result.pass, false);
+  assert.match(result.detail, /ready\\s\+for\\s\+production/);
+  fs.rmSync(fixtureRoot, { recursive: true, force: true });
+});
+
+test("Rust export extraction stops at the end of the program module", () => {
+  const { extractRustProgramFunctions } = loadRunner();
+  const source = `
+#[program]
+pub mod example {
+    pub fn shipped() {}
+}
+
+pub fn internal_helper() {}
+`;
+
+  assert.deepEqual(extractRustProgramFunctions(source), ["shipped"]);
 });

@@ -28,12 +28,33 @@ function normalizeWhitespace(value) {
 }
 
 function extractRustProgramFunctions(source) {
-  const programStart = source.indexOf("#[program]");
-  if (programStart === -1) {
+  const declaration = /#\[program\][\s\S]*?\bpub\s+mod\s+\w+\s*\{/.exec(
+    source,
+  );
+  if (!declaration) {
     return [];
   }
 
-  const programSource = source.slice(programStart);
+  const openingBrace =
+    declaration.index + declaration[0].lastIndexOf("{");
+  let depth = 0;
+  let closingBrace = -1;
+  for (let index = openingBrace; index < source.length; index += 1) {
+    if (source[index] === "{") {
+      depth += 1;
+    } else if (source[index] === "}") {
+      depth -= 1;
+      if (depth === 0) {
+        closingBrace = index;
+        break;
+      }
+    }
+  }
+  if (closingBrace === -1) {
+    throw new Error("Unclosed Rust #[program] module");
+  }
+
+  const programSource = source.slice(openingBrace + 1, closingBrace);
   return [...programSource.matchAll(/\bpub\s+fn\s+([a-zA-Z0-9_]+)\s*\(/g)].map(
     (match) => match[1],
   );
@@ -93,6 +114,27 @@ function evaluateAssertion(assertion, repoRoot) {
       };
     }
 
+    case "excludesPatterns": {
+      const findings = [];
+      for (const relativePath of assertion.paths) {
+        const source = normalizeWhitespace(
+          readRepositoryFile(repoRoot, relativePath),
+        );
+        for (const pattern of assertion.patterns) {
+          if (new RegExp(pattern, "i").test(source)) {
+            findings.push(`${relativePath}: /${pattern}/i`);
+          }
+        }
+      }
+      return {
+        pass: findings.length === 0,
+        detail:
+          findings.length === 0
+            ? `${assertion.paths.length} file(s) exclude unsupported claim patterns`
+            : `unsupported claim pattern found: ${findings.join(" | ")}`,
+      };
+    }
+
     case "rustProgramFunctionsEqual": {
       const source = readRepositoryFile(repoRoot, assertion.path);
       const actual = extractRustProgramFunctions(source).sort();
@@ -141,6 +183,19 @@ function evaluateAssertion(assertion, repoRoot) {
           missing.length === 0
             ? `${assertion.path} exports ${assertion.expected.length} expected symbol(s)`
             : `${assertion.path} is missing exports: ${missing.join(", ")}`,
+      };
+    }
+
+    case "typescriptExportsEqual": {
+      const source = readRepositoryFile(repoRoot, assertion.path);
+      const actual = [...extractTypeScriptExports(source)].sort();
+      const expected = [...assertion.expected].sort();
+      const pass = JSON.stringify(actual) === JSON.stringify(expected);
+      return {
+        pass,
+        detail: pass
+          ? `${assertion.path} exports exactly ${actual.length} expected symbol(s)`
+          : `${assertion.path} exports [${actual.join(", ")}], expected [${expected.join(", ")}]`,
       };
     }
 
@@ -292,6 +347,7 @@ module.exports = {
   GATEWAY_URL,
   extractRustProgramFunctions,
   extractTypeScriptExports,
+  evaluateAssertion,
   loadCases,
   runDeterministicSuite,
   runGatewayJudge,
