@@ -31,7 +31,7 @@ test("offline suite passes without making a network request", async () => {
   assert.equal(requested, false);
   assert.deepEqual(
     new Set(result.deterministic.results.map(({ category }) => category)),
-    new Set(["network", "security", "integration", "consumer-demo"]),
+    new Set(["network", "security", "integration", "consumer-demo"])
   );
 });
 
@@ -81,14 +81,12 @@ test("HTTP 402 stops the judge cleanly after one request", async () => {
   assert.equal(requests.length, 1);
   assert.equal(
     requests[0].url,
-    "https://ai-gateway.vercel.sh/v1/chat/completions",
+    "https://ai-gateway.vercel.sh/v1/chat/completions"
   );
 
   const body = JSON.parse(requests[0].init.body);
   assert.equal(body.model, "google/gemini-2.5-flash-lite");
-  assert.deepEqual(body.providerOptions.gateway.tags, [
-    "feature:hedwig-eval",
-  ]);
+  assert.deepEqual(body.providerOptions.gateway.tags, ["feature:hedwig-eval"]);
 });
 
 test("CLI defaults to offline and judge mode skips without a key", () => {
@@ -115,11 +113,11 @@ test("CLI defaults to offline and judge mode skips without a key", () => {
 test("pattern assertions reject equivalent production overclaims", () => {
   const { evaluateAssertion } = loadRunner();
   const fixtureRoot = fs.mkdtempSync(
-    path.join(os.tmpdir(), "hedwig-honesty-eval-"),
+    path.join(os.tmpdir(), "hedwig-honesty-eval-")
   );
   fs.writeFileSync(
     path.join(fixtureRoot, "copy.md"),
-    "Hedwig is ready for production.",
+    "Hedwig is ready for production."
   );
 
   const result = evaluateAssertion(
@@ -128,7 +126,7 @@ test("pattern assertions reject equivalent production overclaims", () => {
       paths: ["copy.md"],
       patterns: ["\\bready\\s+for\\s+production\\b"],
     },
-    fixtureRoot,
+    fixtureRoot
   );
 
   assert.equal(result.pass, false);

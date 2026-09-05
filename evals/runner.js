@@ -3,13 +3,9 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
-const GATEWAY_URL =
-  "https://ai-gateway.vercel.sh/v1/chat/completions";
+const GATEWAY_URL = "https://ai-gateway.vercel.sh/v1/chat/completions";
 const DEFAULT_MODEL = "google/gemini-2.5-flash-lite";
-const ALLOWED_MODELS = new Set([
-  DEFAULT_MODEL,
-  "openai/gpt-5-nano",
-]);
+const ALLOWED_MODELS = new Set([DEFAULT_MODEL, "openai/gpt-5-nano"]);
 
 function readRepositoryFile(repoRoot, relativePath) {
   const resolvedRoot = path.resolve(repoRoot);
@@ -28,15 +24,12 @@ function normalizeWhitespace(value) {
 }
 
 function extractRustProgramFunctions(source) {
-  const declaration = /#\[program\][\s\S]*?\bpub\s+mod\s+\w+\s*\{/.exec(
-    source,
-  );
+  const declaration = /#\[program\][\s\S]*?\bpub\s+mod\s+\w+\s*\{/.exec(source);
   if (!declaration) {
     return [];
   }
 
-  const openingBrace =
-    declaration.index + declaration[0].lastIndexOf("{");
+  const openingBrace = declaration.index + declaration[0].lastIndexOf("{");
   let depth = 0;
   let closingBrace = -1;
   for (let index = openingBrace; index < source.length; index += 1) {
@@ -56,7 +49,7 @@ function extractRustProgramFunctions(source) {
 
   const programSource = source.slice(openingBrace + 1, closingBrace);
   return [...programSource.matchAll(/\bpub\s+fn\s+([a-zA-Z0-9_]+)\s*\(/g)].map(
-    (match) => match[1],
+    (match) => match[1]
   );
 }
 
@@ -81,10 +74,10 @@ function evaluateAssertion(assertion, repoRoot) {
   switch (assertion.type) {
     case "contains": {
       const source = normalizeWhitespace(
-        readRepositoryFile(repoRoot, assertion.path),
+        readRepositoryFile(repoRoot, assertion.path)
       );
       const missing = assertion.values.filter(
-        (value) => !source.includes(normalizeWhitespace(value)),
+        (value) => !source.includes(normalizeWhitespace(value))
       );
       return {
         pass: missing.length === 0,
@@ -118,7 +111,7 @@ function evaluateAssertion(assertion, repoRoot) {
       const findings = [];
       for (const relativePath of assertion.paths) {
         const source = normalizeWhitespace(
-          readRepositoryFile(repoRoot, relativePath),
+          readRepositoryFile(repoRoot, relativePath)
         );
         for (const pattern of assertion.patterns) {
           if (new RegExp(pattern, "i").test(source)) {
@@ -144,7 +137,9 @@ function evaluateAssertion(assertion, repoRoot) {
         pass,
         detail: pass
           ? `${assertion.path} exports exactly ${actual.join(", ")}`
-          : `${assertion.path} exports [${actual.join(", ")}], expected [${expected.join(", ")}]`,
+          : `${assertion.path} exports [${actual.join(
+              ", "
+            )}], expected [${expected.join(", ")}]`,
       };
     }
 
@@ -156,17 +151,19 @@ function evaluateAssertion(assertion, repoRoot) {
           ? new Set(extractRustProgramFunctions(source))
           : extractTypeScriptExports(source);
       const missingDocs = assertion.expected.filter(
-        (name) => !documentation.includes(name),
+        (name) => !documentation.includes(name)
       );
       const missingExports = assertion.expected.filter(
-        (name) => !exported.has(name),
+        (name) => !exported.has(name)
       );
       const pass = missingDocs.length === 0 && missingExports.length === 0;
       return {
         pass,
         detail: pass
           ? `${assertion.docsPath} names ${assertion.expected.length} export(s) present in ${assertion.sourcePath}`
-          : `missing from docs [${missingDocs.join(", ")}]; missing from source exports [${missingExports.join(", ")}]`,
+          : `missing from docs [${missingDocs.join(
+              ", "
+            )}]; missing from source exports [${missingExports.join(", ")}]`,
       };
     }
 
@@ -195,7 +192,9 @@ function evaluateAssertion(assertion, repoRoot) {
         pass,
         detail: pass
           ? `${assertion.path} exports exactly ${actual.length} expected symbol(s)`
-          : `${assertion.path} exports [${actual.join(", ")}], expected [${expected.join(", ")}]`,
+          : `${assertion.path} exports [${actual.join(
+              ", "
+            )}], expected [${expected.join(", ")}]`,
       };
     }
 
@@ -216,7 +215,7 @@ function loadCases(repoRoot) {
 function runDeterministicSuite({ repoRoot, cases = loadCases(repoRoot) }) {
   const results = cases.map((testCase) => {
     const assertions = testCase.assertions.map((assertion) =>
-      evaluateAssertion(assertion, repoRoot),
+      evaluateAssertion(assertion, repoRoot)
     );
     return {
       id: testCase.id,
@@ -250,7 +249,9 @@ async function runGatewayJudge({
   }
   if (!ALLOWED_MODELS.has(model)) {
     throw new Error(
-      `Unsupported judge model "${model}". Use ${[...ALLOWED_MODELS].join(" or ")}`,
+      `Unsupported judge model "${model}". Use ${[...ALLOWED_MODELS].join(
+        " or "
+      )}`
     );
   }
   if (typeof fetchImpl !== "function") {
@@ -304,7 +305,9 @@ async function runGatewayJudge({
   if (!response.ok) {
     const detail = await response.text();
     throw new Error(
-      `AI Gateway returned HTTP ${response.status}${detail ? `: ${detail}` : ""}`,
+      `AI Gateway returned HTTP ${response.status}${
+        detail ? `: ${detail}` : ""
+      }`
     );
   }
 
