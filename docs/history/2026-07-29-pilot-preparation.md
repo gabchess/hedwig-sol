@@ -1,5 +1,7 @@
 # Seven-day pilot preparation
 
+Historical record, superseded 2026-09-06. This is not the current offer. See [agent access proof](../agent-access/proof-offer.md).
+
 Status: offer published; signed pilot open
 
 Date: 2026-07-29
@@ -16,7 +18,7 @@ dry run, and an explicit merge, revise, or reject decision.
 
 ## Published offer
 
-The [pilot program](../pilot-program.md) records the scope, team requirements,
+The [pilot program](2026-07-shared-authorization-pilot.md) records the scope, team requirements,
 current product limits, and decision criteria. The offer keeps actor
 authentication inside each consuming program and uses Hedwig only as the shared
 membership store.

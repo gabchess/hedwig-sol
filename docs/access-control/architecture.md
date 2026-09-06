@@ -1,7 +1,7 @@
 # Hedwig Architecture
 
 Hedwig is an onchain authorization primitive organized around three domain
-nouns—orgs, roles, and members—and six domain actions. The repository keeps the
+nouns: orgs, roles, and members. It has six domain actions. The repository keeps the
 conventional Anchor shell while making the authorization model visible in file
 and symbol names.
 
@@ -85,11 +85,11 @@ domain layer or evidence of independent adoption.
 | `programs/hedwig_consumer/`             | Secure CPI reference consumer and negative tests                |
 | `sdk/`                                  | Repository-local six-instruction TypeScript SDK alpha           |
 | `app/`                                  | SDK-driven core lifecycle and live consumer-integration clients |
-| `docs/integration-guide.md`             | Actor binding, CPI, and local SDK usage                         |
-| `docs/grant-progress.md`                | Public shipped-work and claim-evidence ledger                   |
-| `docs/operations.md`                    | Devnet upgrade, verification, rollback, and incident steps      |
+| `docs/access-control/integration-guide.md`             | Actor binding, CPI, and local SDK usage                         |
+| `docs/grants/progress.md`                | Public shipped-work and claim-evidence ledger                   |
+| `docs/deployment/operations.md`                    | Devnet upgrade, verification, rollback, and incident steps      |
 | `THREAT-MODEL.md`                       | Trust boundaries and security posture                           |
 | `ROADMAP.md`                            | Evidence-gated delivery sequence                                |
 
 Integration risks, especially holder authentication and upgrade authority,
-belong in [THREAT-MODEL.md](../THREAT-MODEL.md), not in this code map.
+belong in [THREAT-MODEL.md](../../THREAT-MODEL.md), not in this code map.

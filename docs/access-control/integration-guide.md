@@ -35,17 +35,17 @@ instruction when Hedwig rejects a disabled, expired, revoked, or mismatched
 membership.
 
 The compiling reference is
-[`programs/hedwig_consumer/src/lib.rs`](../programs/hedwig_consumer/src/lib.rs).
+[`programs/hedwig_consumer/src/lib.rs`](../../programs/hedwig_consumer/src/lib.rs).
 Its LiteSVM suite covers the successful path, actor substitution, missing
 signature, wrong role, expired and disabled membership, revocation, a substituted
 Hedwig program, and a wrong-owned role account.
 
 The same consumer is deployed on devnet at
 `52D3pTYvMwLYbiigY5xg55n4HmtEzTKCEicx1Cojzo9a`. The live proof in
-[`app/consumer-demo.ts`](../app/consumer-demo.ts) creates a fresh authenticated
+[`app/consumer-demo.ts`](../../app/consumer-demo.ts) creates a fresh authenticated
 actor, grants that actor a role, initializes a consumer counter, and increments
 it through Hedwig CPI. The
-[promotion record](audits/2026-07-24-consumer-devnet-integration.md) contains
+[promotion record](../deployment/evidence/2026-07-24-consumer-devnet-integration.md) contains
 the artifact hash, deployment transaction, every proof transaction, and final
 account state.
 
@@ -71,8 +71,8 @@ yarn sdk:build
 
 The app resolves it through `file:../sdk`. The SDK never creates keypairs and
 requires each sender to receive its signer array explicitly. See
-[`sdk/README.md`](../sdk/README.md) for the API and
-[`app/README.md`](../app/README.md) for the devnet lifecycle.
+[`sdk/README.md`](../../sdk/README.md) for the API and
+[`app/README.md`](../../app/README.md) for the devnet lifecycle.
 
 ## Local verification
 

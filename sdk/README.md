@@ -40,7 +40,7 @@ The SDK never generates a keypair.
 The devnet reference consumer demo uses this SDK to create the org, role, and
 membership before a separate program authenticates the holder and calls Hedwig
 through CPI. See [`app/consumer-demo.ts`](../app/consumer-demo.ts) and its
-[public promotion record](../docs/audits/2026-07-24-consumer-devnet-integration.md).
+[public promotion record](../docs/deployment/evidence/2026-07-24-consumer-devnet-integration.md).
 
 ## Membership is not authentication
 

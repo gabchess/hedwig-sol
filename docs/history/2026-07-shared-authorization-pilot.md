@@ -1,5 +1,7 @@
 # Seven-day shared authorization pilot
 
+Historical record, superseded 2026-09-06. This is not the current offer. See [agent access proof](../agent-access/proof-offer.md).
+
 If two related Anchor programs each decide who may change state, Hedwig will map one real path and show whether one role store removes work without weakening actor authentication.
 
 This is a free, seven-day pilot for one qualified Solana team. It ends with a merge, revise, or reject decision. It does not require the team to adopt Hedwig.
@@ -90,5 +92,5 @@ Hedwig has no verified design partner, customer, revenue, production use, indepe
 
 The offer is published. No team has signed the pilot, and no design partner,
 customer, or external adoption has been verified. Current program evidence
-remains in the [grant progress ledger](grant-progress.md) and
-[roadmap](../ROADMAP.md).
+remains in the [grant progress ledger](../grants/progress.md) and
+[roadmap](../../ROADMAP.md).

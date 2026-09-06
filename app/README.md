@@ -93,5 +93,5 @@ authority, stored role, counter value, and matching Hedwig member holder. It
 ends with `Hedwig-gated consumer state change OK on devnet`.
 
 The first public run is recorded in
-[`docs/audits/2026-07-24-consumer-devnet-integration.md`](../docs/audits/2026-07-24-consumer-devnet-integration.md).
+[`docs/deployment/evidence/2026-07-24-consumer-devnet-integration.md`](../docs/deployment/evidence/2026-07-24-consumer-devnet-integration.md).
 It is a builder-owned reference integration, not independent adoption.

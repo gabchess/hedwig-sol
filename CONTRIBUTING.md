@@ -31,8 +31,8 @@ install policy is resolved.
 - Secure consumer and tests: `programs/hedwig_consumer/`
 - Repository-local TypeScript SDK alpha: `sdk/`
 - SDK-driven devnet demo: `app/demo.ts`
-- Integration guide: `docs/integration-guide.md`
-- Architecture map: `docs/architecture.md`
+- Integration guide: `docs/access-control/integration-guide.md`
+- Architecture map: `docs/access-control/architecture.md`
 - Threat model and known risks: `THREAT-MODEL.md`
 - Roadmap: `ROADMAP.md`
 
