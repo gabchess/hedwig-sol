@@ -41,7 +41,7 @@ AI_GATEWAY_API_KEY=... npm run evals:judge
 
 If the variable is absent, judge mode reports `skipped` and exits without a
 request. The key must be the capped `hedwig-evals-8` key: **$8 budget, no
-refresh**. Never use the Arcana unlimited key for this harness. Keep the key in
+refresh**. Never use an uncapped key for this evaluation. Keep the key in
 the environment or a GitHub Actions secret; do not commit or print it.
 
 The default model is `google/gemini-2.5-flash-lite`. The only supported

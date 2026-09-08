@@ -1,41 +1,44 @@
 # Hedwig
 
-Hedwig is shared authorization for related Anchor programs: one canonical role
-store, with each consumer still responsible for authenticating its actor.
+**Agent access you can revoke and verify.**
 
-Assign a named role to any pubkey, set optional membership expiry, disable the
-role in an incident, and let related Solana programs verify active membership
-through direct or CPI-safe checks.
+Hedwig gives Solana apps a shared, revocable role record for software agents.
 
-Hedwig is a devnet-stage Anchor program. The repository implements six
-instructions, a secure reference consumer, and a repository-local TypeScript
-SDK alpha.
-The local suites contain 40 LiteSVM integration tests and 27 SDK tests. The
-reviewed core and consumer are both live on devnet. On 2026-07-24, the SDK
-completed the six-instruction lifecycle and an authenticated member changed
-state in the separate consumer through CPI.
+Give an agent a role with an expiry. Each integrated Solana program authenticates
+that agent and checks its current membership before a protected action. Revoke
+membership or disable the role to deny later actions that use that check.
 
-Devnet program: `H4J9wWhraK2Zvn4o9aFheFVmAf7nfaBNPw3d7w77X1eC`
-
-Devnet reference consumer: `52D3pTYvMwLYbiigY5xg55n4HmtEzTKCEicx1Cojzo9a`
+Hedwig is a devnet-stage Anchor program with six instructions, a separate
+reference consumer, and a repository-local TypeScript SDK alpha. The consumer
+shows an authenticated actor changing a protected counter through CPI.
 
 ## Why Hedwig
 
-Teams that maintain related Solana programs often repeat account layouts,
-authorization rules, expiry behavior, and revocation flows. Those copies can
-drift: a role recognized by one consumer has no shared meaning in another.
+An agent can keep trying to work after a task ends or an operator intervenes.
+For an integrated Solana action, the useful question is whether the program
+will still accept that agent's authority when the transaction executes.
 
-Hedwig keeps membership in one small onchain store:
+Hedwig keeps `Org`, `Role`, and `Member` state in one onchain store. Related
+programs can check the same membership during their own transaction. The
+consumer defines the actions a role permits and must authenticate the actor.
 
-- an `Org` is a role namespace;
-- a `Role` is a named authority within that org;
-- a `Member` records that one pubkey holds one role; and
-- `check_role` is the CPI entrypoint other programs can use to verify active
-  membership.
+Revocation takes effect through the updated chain state. It does not undo an
+executed transaction, terminate a process, remove unrelated credentials, or
+stop actions in programs that do not enforce the check. Transactions ordered
+before revocation can still succeed. Expiry and revocation alone are not a
+unique capability compared with wallet policy products.
 
-The holder can be a wallet, multisig, program-derived identity, or agent key.
-Hedwig records membership; each consumer authenticates its actor and decides
-what that role permits.
+## Integration proof
+
+When work resumes, a technical owner can test one recurring protected action
+with a dedicated agent identity. The proof records valid membership, expiry or
+revocation, a denied retry, the transaction result, and unchanged protected
+state.
+
+The [integration proof](docs/agent-access/integration-proof.md) defines the scope and
+limits. The [reference flow](docs/agent-access/reference-flow.md) uses a generic vault
+rebalance job to make the access boundary concrete. It does not claim a vault
+integration or customer adoption.
 
 ## Current status
 
@@ -49,32 +52,26 @@ what that role permits.
 | TypeScript SDK      | Repository-local `0.1.0-alpha.0`; built and tested, not published                   |
 | Secure CPI consumer | Deployed at slot `478667066`; live Hedwig-gated state change verified               |
 | Upgrade authority   | Single deployer key; 2-of-3 Squads transfer planned before mainnet                  |
-| Pilot validation    | Offer published; no signed pilot or external adoption                               |
+| Validation          | Agent-access integration hypothesis; no signed pilot or external adoption           |
 | Network             | Devnet; mainnet is planned                                                          |
 
 See [ROADMAP.md](ROADMAP.md) for evidence-gated delivery milestones and
 [THREAT-MODEL.md](THREAT-MODEL.md) for the current trust boundaries.
 
-Deployment evidence was checked on 2026-07-24. The live program was upgraded at
+Binary and lifecycle evidence was checked on 2026-07-24. A
+[read-only presence check on 2026-09-06](docs/deployment/evidence/2026-09-06-program-presence.md)
+confirmed both program addresses and their recorded deployment slots. The live program was upgraded at
 slot `478655638`; its upgrade-authority pubkey remains
 `8gbaJEfM5VDs9BpFLgwMTq7s2FkVpEri8ZnPbxn4HPqY`. The reviewed ELF SHA-256 is
 `42670041e7df0f9832930bfa511b884e8b59ceebc8e14b0638c4627a83e6aed3`.
 See the
-[promotion record](docs/audits/2026-07-24-devnet-promotion.md) for the
+[promotion record](docs/deployment/evidence/2026-07-24-devnet-promotion.md) for the
 transaction, loader-padding proof, and six lifecycle signatures.
 
-The project received USDG 1,500 from a USDG 3,000 grant. The maintainer reports
-that the authenticated portal exposes a final-tranche request form and the
-grant program's general completion policy. This portal state is not publicly
-verifiable, and no project-specific milestone or KPI text was found. Progress
-is tracked through the evidence gates in [ROADMAP.md](ROADMAP.md) and the public
-[grant progress ledger](docs/grant-progress.md), without treating the reference
-consumer as independent adoption.
-
-The next product evidence gate is one signed seven-day pilot for a real
-state-changing path across two related Anchor programs. The public
-[pilot program](docs/pilot-program.md) defines the offer and its limits. No
-signed pilot, design partner, customer, or external adoption has been verified.
+Funding history remains in the [grant progress ledger](docs/grants/progress.md).
+No signed pilot, design partner, customer, revenue, production use, or external
+adoption has been verified. The single builder-owned consumer proves a
+technical integration pattern, not demand from Solana agent teams.
 
 ## Instructions
 
@@ -115,7 +112,10 @@ expired. It does **not** prove that the transaction actor controls that holder.
 
 A consuming program must authenticate the actor first, for example with a
 `Signer<'info>` for a wallet or with its own validated PDA constraints, and pass
-that authenticated account as `holder`:
+that authenticated account as `holder`. It must also bind the supplied role to
+its configured required role before the CPI. Otherwise an actor could supply
+an unrelated role it controls. The reference consumer uses
+`has_one = required_role` on its counter account for this binding:
 
 ```rust
 hedwig_sol::cpi::check_role(CpiContext::new(
@@ -134,7 +134,7 @@ not return a boolean and does not grant transaction authority by itself.
 
 The Rust CPI interface comes from the program crate. The compiling reference
 consumer, its negative tests, and the TypeScript client flow are documented in
-[the integration guide](docs/integration-guide.md).
+[the integration guide](docs/access-control/integration-guide.md).
 
 The reference consumer is live on devnet. Its first verified state change used
 an authenticated signer as the Hedwig holder and incremented a separate
@@ -163,19 +163,15 @@ the membership lifecycle against devnet, see
 
 ## Repository guide
 
-- [docs/architecture.md](docs/architecture.md): domain boundaries and code map
-- [docs/integration-guide.md](docs/integration-guide.md): secure CPI and local SDK use
-- [docs/pilot-program.md](docs/pilot-program.md): bounded seven-day pilot offer and limits
-- [docs/progress/2026-07-29-pilot-preparation.md](docs/progress/2026-07-29-pilot-preparation.md): public preparation record
-- [docs/grant-progress.md](docs/grant-progress.md): public delivery and evidence ledger
-- [docs/operations.md](docs/operations.md): devnet upgrade, verification, and rollback
-- [docs/audits/2026-07-24-full-audit.md](docs/audits/2026-07-24-full-audit.md): commit-pinned AI-assisted review findings
-- [docs/audits/2026-07-24-devnet-promotion.md](docs/audits/2026-07-24-devnet-promotion.md): live deployment and lifecycle proof
-- [docs/audits/2026-07-24-consumer-devnet-integration.md](docs/audits/2026-07-24-consumer-devnet-integration.md): live CPI consumer proof
-- [THREAT-MODEL.md](THREAT-MODEL.md): assets, trust boundaries, and open risks
-- [SECURITY.md](SECURITY.md): private vulnerability reporting
-- [ROADMAP.md](ROADMAP.md): shipped evidence and remaining milestones
-- [CONTRIBUTING.md](CONTRIBUTING.md): contributor workflow and verification gates
+- [Agent access](docs/agent-access/README.md): product scope and integration evidence
+- [Access control](docs/access-control/architecture.md): role model and code map
+- [Integration](docs/access-control/integration-guide.md): actor binding, CPI, and SDK
+- [Security](THREAT-MODEL.md): boundaries, risks, and [recorded review](docs/security/reviews/2026-07-24-full-audit.md)
+- [Deployment](docs/deployment/operations.md): operations and [devnet evidence](docs/deployment/evidence/2026-07-24-consumer-devnet-integration.md)
+- [Grants](docs/grants/progress.md): funding and delivery evidence
+- [History](docs/history/README.md): superseded pilot offer and dated records
+- [Roadmap](ROADMAP.md): shipped evidence and next product gates
+- [Contributing](CONTRIBUTING.md): verification and contribution workflow
 
 ## License
 

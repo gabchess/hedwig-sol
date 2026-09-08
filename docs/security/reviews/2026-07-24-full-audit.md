@@ -12,7 +12,7 @@ Deployment note: the reviewed consumer was assigned its generated deploy ID,
 rebuilt, reran the full 42-test Rust suite, and was deployed separately after
 the core promotion. The clean public source commit above includes that ID
 alignment. Its exact-byte and live CPI proof is recorded in
-[`2026-07-24-consumer-devnet-integration.md`](./2026-07-24-consumer-devnet-integration.md).
+[`2026-07-24-consumer-devnet-integration.md`](../../deployment/evidence/2026-07-24-consumer-devnet-integration.md).
 
 ## Verdict
 

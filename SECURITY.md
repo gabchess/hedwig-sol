@@ -32,5 +32,5 @@ integrations describe surfaces Hedwig does not operate today.
 ## Response
 
 The maintainer will preserve the report privately, validate reachability and
-impact, and follow [`docs/operations.md`](docs/operations.md) for containment,
+impact, and follow [`docs/deployment/operations.md`](docs/deployment/operations.md) for containment,
 recovery, evidence handling, and incident follow-up.

@@ -1,24 +1,12 @@
 # Hedwig roadmap
 
-Hedwig is shared authorization for related Anchor programs: one canonical role
-store, with each consumer still responsible for authenticating its actor.
-Hedwig advances through proof, not feature count. The delivery order is to
-secure the integration boundary, test one real two-program path, harden
-governance, then consider mainnet.
+Hedwig gives Solana apps a shared, revocable role record for software agents.
+Implementation work is paused after the devnet core and reference consumer.
+When work resumes, the next product slice will validate one recurring protected
+action with an authenticated agent identity. This is an integration hypothesis,
+not a shipped hosted application.
 
-## Grant context
-
-- Total grant: USDG 3,000.
-- Received: USDG 1,500.
-- Remaining: USDG 1,500.
-- The maintainer reports that the authenticated portal exposes a final-tranche
-  request form and the grant program's general completion policy.
-- This portal state is not publicly verifiable, and no project-specific
-  milestone or KPI text was found.
-
-The working rule is therefore to keep shipping verifiable roadmap progress.
-Grant amounts are funding facts, not evidence that a milestone or adoption
-claim has been accepted.
+Funding and accepted delivery facts remain in the [grant ledger](docs/grants/progress.md).
 
 ## Current release slice
 
@@ -48,8 +36,8 @@ account, lifecycle, program-substitution, and overflow failures.
 
 **State:** shipped on devnet at
 `52D3pTYvMwLYbiigY5xg55n4HmtEzTKCEicx1Cojzo9a`. The reviewed 176,264-byte
-artifact was deployed at slot `478667066`; the live dump matches it byte for
-byte. A fresh authenticated actor then created a Hedwig role and membership,
+artifact was deployed at slot `478667066`; the July 24 live dump matched it
+byte for byte. A fresh authenticated actor then created a Hedwig role and membership,
 initialized a consumer-owned counter, and incremented it from zero to one
 through `check_role` CPI.
 
@@ -81,52 +69,37 @@ process at one commit. The 2026-07-24 promotion proved:
 
 The single-key upgrade authority remains a named mainnet blocker. It does not
 invalidate the completed devnet-only upgrade. See the
-[review](docs/audits/2026-07-24-full-audit.md) and
-[core promotion record](docs/audits/2026-07-24-devnet-promotion.md). The
-[consumer promotion record](docs/audits/2026-07-24-consumer-devnet-integration.md)
+[review](docs/security/reviews/2026-07-24-full-audit.md) and
+[core promotion record](docs/deployment/evidence/2026-07-24-devnet-promotion.md). The
+[consumer promotion record](docs/deployment/evidence/2026-07-24-consumer-devnet-integration.md)
 contains its deployment and CPI transaction evidence.
 
-The [grant progress ledger](docs/grant-progress.md) maps shipped work to public
+The [grant progress ledger](docs/grants/progress.md) maps shipped work to public
 artifacts. It is the public claim record for the remaining USDG 1,500; the
 roadmap remains the decision record.
 
-### Founder-led pilot preparation
+## Next evidence gate: one protected action
 
-The [seven-day pilot offer](docs/pilot-program.md) defines one bounded
-two-program authorization path, a manual before-and-after authority map, a
-custody dry run, migration and rollback steps, and a merge, revise, or reject
-decision. The public
-[preparation record](docs/progress/2026-07-29-pilot-preparation.md) records the
-claim boundary.
+The [agent access integration proof](docs/agent-access/integration-proof.md) is
+ready for later work. It starts with one recurring action and one technical
+owner. The buyer remains a hypothesis until an independent team shows a real
+access problem and accepts the integration.
 
-No signed pilot, design partner, customer, revenue, production use, or external
-adoption has been verified.
+1. Identify the actor, its existing credentials, and the action being protected.
+2. Prove authenticated success while membership is valid.
+3. Prove a later retry fails after confirmed revocation, and separately after expiry.
+4. Show the transaction result and unchanged protected state on denial.
+5. Record whether an independent team would keep the integration and why.
 
-## Next evidence gate: sign one seven-day pilot
-
-The next product question is whether one qualified Anchor team will expose a
-real state-changing path across two related programs and sign the bounded
-pilot. The pilot must:
-
-- verify the technical owner and current release timing;
-- interview past authorization behavior before presenting Hedwig;
-- produce one manual before/after authority map;
-- sign a seven-day scope for one two-program direct or CPI path; and
-- end with an explicit merge, revise, or reject decision.
-
-Do not add product features before this signal. If no qualified team signs
-after one week of pilot validation, stop feature work, record the rejection
-reasons, and review the product thesis. SDK publication, deployment, and
-custody changes remain separate decisions.
-
-The signed scope is the demand signal. The later integration is technical
-evidence, not a customer-success claim by default.
+A builder-owned consumer proves behavior. It does not establish external demand. The
+[older two-program pilot](docs/history/2026-07-shared-authorization-pilot.md)
+remains a historical record, not the current integration proof.
 
 ## Later gates
 
 ### Independent design partners
 
-Expand from the signed pilot only if the signal is useful. Three independent
+Expand from the agent access proof only if the signal is useful. Three independent
 teams must publish or link reproducible devnet integration evidence. Builder
 fixtures and the reference consumer do not count.
 
@@ -161,10 +134,10 @@ safer than continued governed upgrades.
 ## Deferred until evidence changes
 
 Do not add role hierarchy, eligibility modules, badges, claimable roles,
-delegation, instruction allowlists, spending caps, an agent control surface, an
+delegation, instruction allowlists, spending caps, an
 indexer dashboard, or a standalone Rust CPI crate because they sound useful.
 Build one only when observed integrations expose the missing primitive.
 
 The current architecture is documented in
-[`docs/architecture.md`](docs/architecture.md). Status claims must link to
+[`docs/access-control/architecture.md`](docs/access-control/architecture.md). Status claims must link to
 tests, review evidence, deployment output, or external artifacts.
