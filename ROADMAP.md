@@ -1,8 +1,10 @@
 # Hedwig roadmap
 
 Hedwig gives Solana apps a shared, revocable role record for software agents.
-The next product slice makes one agent's granted, expired, and revoked access
-visible in a Replit devnet experience. This is planned work, not a shipped app.
+Implementation work is paused after the devnet core and reference consumer.
+When work resumes, the next product slice will validate one recurring protected
+action with an authenticated agent identity. This is an integration hypothesis,
+not a shipped hosted application.
 
 Funding and accepted delivery facts remain in the [grant ledger](docs/grants/progress.md).
 
@@ -76,11 +78,12 @@ The [grant progress ledger](docs/grants/progress.md) maps shipped work to public
 artifacts. It is the public claim record for the remaining USDG 1,500; the
 roadmap remains the decision record.
 
-## Next evidence gate: one agent, one protected action
+## Next evidence gate: one protected action
 
-The [agent access proof offer](docs/agent-access/proof-offer.md) starts with one
-recurring action and one technical owner. The buyer remains a hypothesis until
-an independent team shows a real access problem and accepts the integration.
+The [agent access integration proof](docs/agent-access/integration-proof.md) is
+ready for later work. It starts with one recurring action and one technical
+owner. The buyer remains a hypothesis until an independent team shows a real
+access problem and accepts the integration.
 
 1. Identify the actor, its existing credentials, and the action being protected.
 2. Prove authenticated success while membership is valid.
@@ -88,9 +91,9 @@ an independent team shows a real access problem and accepts the integration.
 4. Show the transaction result and unchanged protected state on denial.
 5. Record whether an independent team would keep the integration and why.
 
-A builder demo proves behavior. It does not establish external demand. The
+A builder-owned consumer proves behavior. It does not establish external demand. The
 [older two-program pilot](docs/history/2026-07-shared-authorization-pilot.md)
-remains a historical record, not the current offer.
+remains a historical record, not the current integration proof.
 
 ## Later gates
 

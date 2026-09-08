@@ -28,15 +28,17 @@ stop actions in programs that do not enforce the check. Transactions ordered
 before revocation can still succeed. Expiry and revocation alone are not a
 unique capability compared with wallet policy products.
 
-## Try one protected action
+## Integration proof
 
-**Bring one agent and one protected Solana action. Prove the agent can act while
-its role is valid, and cannot after expiry or revocation.**
+When work resumes, a technical owner can test one recurring protected action
+with a dedicated agent identity. The proof records valid membership, expiry or
+revocation, a denied retry, the transaction result, and unchanged protected
+state.
 
-The [devnet proof offer](docs/agent-access/proof-offer.md) describes a bounded
-integration exercise. The [demo behavior](docs/agent-access/demo.md) specifies
-what a grant, successful task, and denied retry must prove. The proposed Replit
-experience is not implemented in this repository yet.
+The [integration proof](docs/agent-access/integration-proof.md) defines the scope and
+limits. The [reference flow](docs/agent-access/reference-flow.md) uses a generic vault
+rebalance job to make the access boundary concrete. It does not claim a vault
+integration or customer adoption.
 
 ## Current status
 
@@ -50,7 +52,7 @@ experience is not implemented in this repository yet.
 | TypeScript SDK      | Repository-local `0.1.0-alpha.0`; built and tested, not published                   |
 | Secure CPI consumer | Deployed at slot `478667066`; live Hedwig-gated state change verified               |
 | Upgrade authority   | Single deployer key; 2-of-3 Squads transfer planned before mainnet                  |
-| Validation          | Agent access proof proposed; no signed pilot or external adoption                   |
+| Validation          | Agent-access integration hypothesis; no signed pilot or external adoption           |
 | Network             | Devnet; mainnet is planned                                                          |
 
 See [ROADMAP.md](ROADMAP.md) for evidence-gated delivery milestones and
@@ -161,7 +163,7 @@ the membership lifecycle against devnet, see
 
 ## Repository guide
 
-- [Agent access](docs/agent-access/README.md): product scope, proof offer, and demo
+- [Agent access](docs/agent-access/README.md): product scope and integration evidence
 - [Access control](docs/access-control/architecture.md): role model and code map
 - [Integration](docs/access-control/integration-guide.md): actor binding, CPI, and SDK
 - [Security](THREAT-MODEL.md): boundaries, risks, and [recorded review](docs/security/reviews/2026-07-24-full-audit.md)

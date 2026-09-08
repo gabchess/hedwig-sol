@@ -22,10 +22,10 @@
       },
       {
         "type": "contains",
-        "path": "docs/agent-access/proof-offer.md",
+        "path": "docs/agent-access/integration-proof.md",
         "values": [
-          "This is a proposed devnet integration exercise",
-          "There is no verified signed pilot, external adoption, production release, or independent external audit."
+          "This is a design boundary for future integration work.",
+          "No external team, customer, production use, or independent adoption has been verified."
         ]
       },
       {
@@ -36,8 +36,8 @@
           "docs/history/2026-07-shared-authorization-pilot.md",
           "app/README.md",
           "docs/agent-access/README.md",
-          "docs/agent-access/proof-offer.md",
-          "docs/agent-access/demo.md"
+          "docs/agent-access/integration-proof.md",
+          "docs/agent-access/reference-flow.md"
         ],
         "values": [
           "Hedwig is mainnet-ready",
@@ -65,8 +65,8 @@
           "docs/deployment/evidence/2026-07-24-devnet-promotion.md",
           "docs/security/reviews/2026-07-24-full-audit.md",
           "docs/agent-access/README.md",
-          "docs/agent-access/proof-offer.md",
-          "docs/agent-access/demo.md"
+          "docs/agent-access/integration-proof.md",
+          "docs/agent-access/reference-flow.md"
         ],
         "patterns": [
           "\\b(?:is|now|currently)\\s+(?:fully\\s+)?mainnet[- ]ready\\b",

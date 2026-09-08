@@ -62,11 +62,11 @@ production use, independent external audit, or mainnet release.
 
 ## Next claim gate
 
-The July seven-day pilot above is historical. The current product exercise is
-[one agent and one protected action](../agent-access/proof-offer.md). It must
-show authenticated success, confirmed revocation or elapsed expiry, and a denied
-retry with unchanged protected state. An independent team's decision to retain
-the integration is separate demand evidence.
+The July seven-day pilot above is historical. When work resumes, the next
+product exercise is [one agent and one protected action](../agent-access/integration-proof.md).
+It must show authenticated success, confirmed revocation or elapsed expiry, and
+a denied retry with unchanged protected state. An independent team's decision
+to retain the integration is separate demand evidence.
 
 This change in product focus does not claim a new grant milestone, accepted
 completion, additional payment, or customer adoption. The grant facts above

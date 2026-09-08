@@ -1,6 +1,6 @@
 # Seven-day pilot preparation
 
-Historical record, superseded 2026-09-06. This is not the current offer. See [agent access proof](../agent-access/proof-offer.md).
+Historical record, superseded 2026-09-06. See the current [agent access integration boundary](../agent-access/integration-proof.md).
 
 Status: offer published; signed pilot open
 

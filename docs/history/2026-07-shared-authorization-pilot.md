@@ -1,6 +1,6 @@
 # Seven-day shared authorization pilot
 
-Historical record, superseded 2026-09-06. This is not the current offer. See [agent access proof](../agent-access/proof-offer.md).
+Historical record, superseded 2026-09-06. See the current [agent access integration boundary](../agent-access/integration-proof.md).
 
 If two related Anchor programs each decide who may change state, Hedwig will map one real path and show whether one role store removes work without weakening actor authentication.
 
