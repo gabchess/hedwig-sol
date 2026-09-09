@@ -42,7 +42,16 @@ jobs:
           yarn sdk:typecheck
           yarn sdk:test
 
+      - name: Build the SDK
+        run: yarn sdk:build
+
+      - name: Install demo app dependencies
+        run: npm ci --prefix app
+
       - name: Typecheck the demo app
+        # Needs the built SDK and the app's own node_modules: app/package.json
+        # depends on the SDK through "file:../sdk", whose types resolve to
+        # sdk/dist, and sdk/dist is not committed.
         run: ./node_modules/.bin/tsc -p app/tsconfig.json --noEmit
 
       - name: Install Rust
