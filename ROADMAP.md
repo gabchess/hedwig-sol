@@ -85,18 +85,53 @@ Planned. No code exists yet.
 
 `Role.admin` is fixed at `create_role`, initialized to the org authority, and
 `Org.authority` is fixed at `create_org`. The six-instruction surface has no
-way to change either field, so a lost, departed, or compromised key
-permanently strands every role and membership under it. THREAT-MODEL.md names
-this under
+way to change either field, so a departed or compromised key permanently
+strands every role and membership under it once the holder can no longer sign.
+Rotation helps a holder who still controls a key and wants to move to a new
+one. It does not recover a key that is already lost. THREAT-MODEL.md names the
+gap under
 ["Fixed cardinality and immutable authorities"](THREAT-MODEL.md#fixed-cardinality-and-immutable-authorities).
 
-This ships as one or more new instructions that let the current org authority
-rotate `Org.authority`, and let the current role admin rotate `Role.admin`,
-each gated on the existing key's signature. It closes when the instruction
-exists in the reviewed source, a LiteSVM test proves a successful rotation,
-negative tests prove that only the current authority or admin can rotate, and
-a test proves the new key retains full control over the org's or role's
-existing state after rotation.
+This ships as two instructions, `rotate_org_authority` and `rotate_role_admin`,
+each gated on the current key's signature.
+
+Rotating `Role.admin` is a field write with no further consequences, because no
+PDA seed contains `admin`. Rotating `Org.authority` is not, and this is the part
+worth reading before starting.
+
+The `Org` PDA seeds are `["org", authority]`, so an org's address is fixed at
+the pubkey that created it and does not move when the stored `authority`
+changes. `create_role` re-derives that address from the signer:
+
+```rust
+seeds = [ORG_SEED, authority.key().as_ref()],
+bump = org.bump,
+has_one = authority @ HedwigError::Unauthorized,
+```
+
+After an in-place rotation, the new authority fails the `seeds` constraint and
+the old authority fails `has_one`, so nobody can create a role under that org.
+Rotation therefore requires a companion change: drop the `seeds` and `bump`
+constraints from `create_role`'s `org` account and gate on `has_one` alone,
+which is the pattern `assign_role`, `revoke_role`, and `set_role_enabled`
+already use. `Account<'info, Org>` still checks program ownership and the
+account discriminator, so no authorization is lost.
+
+Two consequences to plan for. Dropping the `seeds` constraint changes the error
+an impostor receives in `create_role` from `ConstraintSeeds` to `Unauthorized`,
+so `test_create_role_rejects_non_authority` must be updated in the same change.
+And `deriveOrgPda(authority)` in the SDK resolves an org only from its original
+creating key, never from a rotated `authority`, so callers need the org address
+rather than the current authority.
+
+No account layout changes, so accounts already live on devnet keep working and
+no migration is needed.
+
+It closes when both instructions exist in the reviewed source, a LiteSVM test
+proves a successful rotation, negative tests prove that only the current
+authority or admin can rotate, a test proves the new key can still call
+`create_role` and the other admin-gated instructions after rotation, and a test
+proves the old key cannot.
 
 ## Next evidence gate: one protected action
 
