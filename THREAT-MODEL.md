@@ -5,7 +5,7 @@ consumer. It distinguishes checks enforced by Hedwig from checks an integrating
 program must perform. The live Hedwig deployment contains all six reviewed
 instructions, including the `set_role_enabled` circuit breaker.
 
-Hedwig has not completed an external security review. The 28 core and 12
+Hedwig has not completed an external security review. The 29 core and 12
 consumer LiteSVM integration tests are evidence of the tested behaviors below,
 not a substitute for one.
 

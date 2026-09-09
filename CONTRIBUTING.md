@@ -4,25 +4,40 @@ Hedwig is a small Solana-native roles primitive. Keep changes narrow, auditable,
 
 ## Local checks
 
-Run the full local release checks before opening a PR:
+Run the full local release checks before opening a PR. This list matches
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml). If the two ever drift,
+the workflow file is canonical.
 
 ```bash
-cargo fmt --check
-cargo build
-cargo build-sbf --manifest-path programs/hedwig_consumer/Cargo.toml
-cargo build-sbf --manifest-path programs/hedwig_sol/Cargo.toml
-cargo test --workspace
+bash scripts/test-public-boundary.sh
+bash scripts/check-public-boundary.sh
+npm run evals:test
+npm run evals:offline
+yarn install --frozen-lockfile
+yarn lint
 yarn sdk:typecheck
 yarn sdk:test
 yarn sdk:build
+npm ci --prefix app
 ./node_modules/.bin/tsc -p app/tsconfig.json --noEmit
+cargo fmt --all -- --check
+cargo build --locked --verbose
+cargo build-sbf --manifest-path programs/hedwig_consumer/Cargo.toml -- --locked
+cargo build-sbf --manifest-path programs/hedwig_sol/Cargo.toml -- --locked
+cargo clippy --workspace --all-targets --all-features -- \
+  -A clippy::diverging_sub_expression -A clippy::result_large_err -D warnings
+cargo test --locked --workspace --verbose
+npm audit --package-lock-only --audit-level=moderate --prefix app
+cargo audit
 ```
 
 The tests use LiteSVM and do not require a network connection. Build both SBF
 artifacts before the workspace tests because the fixtures load them at compile
-time. CI enforces the Rust, SBF, and app dependency-audit gates. The SDK and app
-TypeScript checks remain required local gates until the repository's Yarn
-install policy is resolved.
+time. CI runs every check above, including the SDK and app TypeScript gates
+that were local-only before. Build the SDK and install the app's dependencies
+before the app typecheck: `app` depends on the SDK through `file:../sdk`, and
+`sdk/dist` is not committed. `cargo audit` needs
+`cargo install cargo-audit --locked --version 0.22.2` first.
 
 ## Repo map
 
@@ -35,6 +50,8 @@ install policy is resolved.
 - Architecture map: `docs/access-control/architecture.md`
 - Threat model and known risks: `THREAT-MODEL.md`
 - Roadmap: `ROADMAP.md`
+- Public boundary and claim checks: `scripts/`, `evals/`
+- CI workflow: `.github/workflows/ci.yml`
 
 ## Contribution rules
 
@@ -65,3 +82,7 @@ Run `yarn public:check` before opening a pull request.
 A useful PR says what changed, why it matters, and which check proves it. If the
 change touches authorization, include at least one negative test for the failure
 path. Confirm that the public repository boundary still holds.
+
+`main` requires a pull request and a passing `test` check. GitHub blocks direct
+pushes, force pushes, and branch deletion on `main`, including for repository
+admins.
