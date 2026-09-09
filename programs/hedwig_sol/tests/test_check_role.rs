@@ -162,3 +162,41 @@ fn test_check_role_rejects_revoked_membership() {
         0
     );
 }
+
+/// Pins a deliberate design decision: `check_role` proves membership, not
+/// control of the holder key. The `holder` account is intentionally not a
+/// signer, so any caller may ask whether a given pubkey holds a given role.
+///
+/// Consuming programs close this gap themselves by authenticating the actor
+/// and passing that authenticated account as `holder`. See the "Caller
+/// authentication is an integration requirement" section of THREAT-MODEL.md
+/// and the reference consumer in `programs/hedwig_consumer`.
+///
+/// If this test ever fails because `holder` gained a signer requirement, that
+/// is a breaking change to every documented integration pattern, not a fix.
+#[test]
+fn test_check_role_succeeds_for_unrelated_caller_by_design() {
+    let mut svm = new_svm();
+    let (_org, admin, role) = setup_role(&mut svm, "Acme", "admin");
+
+    let holder = funded_keypair(&mut svm).pubkey();
+    let (member, _bump) = member_pda(&role, &holder);
+    send(
+        &mut svm,
+        &admin,
+        &[],
+        ix_assign_role(member, role, holder, admin.pubkey(), 0),
+    )
+    .expect("assign should succeed");
+
+    // An unrelated keypair, holding no role and signing for nobody, calls
+    // check_role against someone else's membership.
+    let stranger = funded_keypair(&mut svm);
+    send(
+        &mut svm,
+        &stranger,
+        &[],
+        ix_check_role(member, role, holder),
+    )
+    .expect("check_role must succeed for an unrelated caller: it verifies membership, not control");
+}

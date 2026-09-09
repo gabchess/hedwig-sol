@@ -2,9 +2,10 @@
 
 Hedwig gives Solana apps a shared, revocable role record for software agents.
 Implementation work is paused after the devnet core and reference consumer.
-When work resumes, the next product slice will validate one recurring protected
-action with an authenticated agent identity. This is an integration hypothesis,
-not a shipped hosted application.
+When work resumes, the next build is admin and authority rotation, closing a
+gap named in THREAT-MODEL.md. The next product-validation slice remains one
+recurring protected action with an authenticated agent identity. That
+validation is an integration hypothesis, not a shipped hosted application.
 
 Funding and accepted delivery facts remain in the [grant ledger](docs/grants/progress.md).
 
@@ -21,7 +22,7 @@ The source implements:
 5. `set_role_enabled`
 6. `revoke_role`
 
-The local core suite contains 28 LiteSVM integration tests plus its generated
+The local core suite contains 29 LiteSVM integration tests plus its generated
 program ID test. The current devnet program at
 `H4J9wWhraK2Zvn4o9aFheFVmAf7nfaBNPw3d7w77X1eC` contains the reviewed
 six-instruction artifact deployed at slot `478655638`.
@@ -77,6 +78,25 @@ contains its deployment and CPI transaction evidence.
 The [grant progress ledger](docs/grants/progress.md) maps shipped work to public
 artifacts. It is the public claim record for the remaining USDG 1,500; the
 roadmap remains the decision record.
+
+## Next build: role admin and org authority rotation
+
+Planned. No code exists yet.
+
+`Role.admin` is fixed at `create_role`, initialized to the org authority, and
+`Org.authority` is fixed at `create_org`. The six-instruction surface has no
+way to change either field, so a lost, departed, or compromised key
+permanently strands every role and membership under it. THREAT-MODEL.md names
+this under
+["Fixed cardinality and immutable authorities"](THREAT-MODEL.md#fixed-cardinality-and-immutable-authorities).
+
+This ships as one or more new instructions that let the current org authority
+rotate `Org.authority`, and let the current role admin rotate `Role.admin`,
+each gated on the existing key's signature. It closes when the instruction
+exists in the reviewed source, a LiteSVM test proves a successful rotation,
+negative tests prove that only the current authority or admin can rotate, and
+a test proves the new key retains full control over the org's or role's
+existing state after rotation.
 
 ## Next evidence gate: one protected action
 
