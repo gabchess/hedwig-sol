@@ -12,6 +12,9 @@ Hedwig is a devnet-stage Anchor program with six instructions, a separate
 reference consumer, and a repository-local TypeScript SDK alpha. The consumer
 shows an authenticated actor changing a protected counter through CPI.
 
+To run the whole lifecycle yourself in about five minutes, see
+[Run locally](#run-locally).
+
 ## Why Hedwig
 
 An agent can keep trying to work after a task ends or an operator intervenes.
@@ -21,6 +24,8 @@ will still accept that agent's authority when the transaction executes.
 Hedwig keeps `Org`, `Role`, and `Member` state in one onchain store. Related
 programs can check the same membership during their own transaction. The
 consumer defines the actions a role permits and must authenticate the actor.
+
+### Scope of the revocation guarantee
 
 Revocation takes effect through the updated chain state. It does not undo an
 executed transaction, terminate a process, remove unrelated credentials, or
@@ -37,28 +42,28 @@ state.
 
 The [integration proof](docs/agent-access/integration-proof.md) defines the scope and
 limits. The [reference flow](docs/agent-access/reference-flow.md) uses a generic vault
-rebalance job to make the access boundary concrete. It does not claim a vault
-integration or customer adoption.
+rebalance job to make the access boundary concrete, not a claimed vault
+integration. See [Current status](#current-status) for the adoption record.
 
 ## Current status
 
-| Surface             | Current state                                                                       |
-| ------------------- | ----------------------------------------------------------------------------------- |
-| Anchor program      | Six instructions implemented                                                        |
-| Rust tests          | 40 LiteSVM integration tests across the core and consumer                           |
-| TypeScript tests    | 27 SDK tests plus SDK and app typechecks                                            |
-| Devnet evidence     | Upgrade verified at slot `478655638`; six-instruction lifecycle finalized afterward |
-| Circuit breaker     | Live `enabled=false` state verified on devnet                                       |
-| TypeScript SDK      | Repository-local `0.1.0-alpha.0`; built and tested, not published                   |
-| Secure CPI consumer | Deployed at slot `478667066`; live Hedwig-gated state change verified               |
-| Upgrade authority   | Single deployer key; 2-of-3 Squads transfer planned before mainnet                  |
-| Validation          | Agent-access integration hypothesis; no signed pilot or external adoption           |
-| Network             | Devnet; mainnet is planned                                                          |
+| Surface                                   | Current state                                                                                   |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Anchor program                            | Six instructions implemented                                                                    |
+| Rust tests                                | 41 [LiteSVM](https://github.com/LiteSVM/litesvm) integration tests across the core and consumer |
+| TypeScript tests                          | 27 SDK tests plus SDK and app typechecks                                                        |
+| Devnet evidence                           | Upgrade verified at slot `478655638`; six-instruction lifecycle finalized afterward             |
+| Role circuit breaker (`set_role_enabled`) | Live `enabled=false` state verified on devnet                                                   |
+| TypeScript SDK                            | Repository-local `0.1.0-alpha.0`; built and tested, not published                               |
+| Secure CPI consumer                       | Deployed at slot `478667066`; live Hedwig-gated state change verified                           |
+| Upgrade authority                         | Single deployer key; 2-of-3 Squads (multisig) transfer planned before mainnet                   |
+| Validation                                | Agent-access integration hypothesis; no signed pilot or external adoption                       |
+| Network                                   | Devnet; mainnet is planned                                                                      |
 
 See [ROADMAP.md](ROADMAP.md) for evidence-gated delivery milestones and
 [THREAT-MODEL.md](THREAT-MODEL.md) for the current trust boundaries.
 
-Binary and lifecycle evidence was checked on 2026-07-24. A
+The maintainer checked binary and lifecycle evidence on 2026-07-24. A
 [read-only presence check on 2026-09-06](docs/deployment/evidence/2026-09-06-program-presence.md)
 confirmed both program addresses and their recorded deployment slots. The live program was upgraded at
 slot `478655638`; its upgrade-authority pubkey remains
@@ -109,12 +114,14 @@ account, so a later grant creates it again.
 `check_role` proves that the supplied `holder` pubkey has a valid member PDA for
 the supplied role, that the role is enabled, and that the membership has not
 expired. It does **not** prove that the transaction actor controls that holder.
+See [Caller authentication is an integration requirement](THREAT-MODEL.md#caller-authentication-is-an-integration-requirement)
+for the full boundary.
 
 A consuming program must authenticate the actor first, for example with a
 `Signer<'info>` for a wallet or with its own validated PDA constraints, and pass
 that authenticated account as `holder`. It must also bind the supplied role to
-its configured required role before the CPI. Otherwise an actor could supply
-an unrelated role it controls. The reference consumer uses
+its configured required role before the CPI, or an actor could supply an
+unrelated role it controls. The reference consumer uses
 `has_one = required_role` on its counter account for this binding:
 
 ```rust
@@ -129,17 +136,14 @@ hedwig_sol::cpi::check_role(CpiContext::new(
 ```
 
 The CPI returns `Ok(())` on active membership and a Hedwig error otherwise. With
-the `?` shown above, a failed check aborts the consuming instruction. Hedwig does
-not return a boolean and does not grant transaction authority by itself.
+the `?` shown above, a failed check aborts the consuming instruction. Hedwig
+does not return a boolean to branch on, and it grants no transaction authority
+by itself.
 
 The Rust CPI interface comes from the program crate. The compiling reference
 consumer, its negative tests, and the TypeScript client flow are documented in
-[the integration guide](docs/access-control/integration-guide.md).
-
-The reference consumer is live on devnet. Its first verified state change used
-an authenticated signer as the Hedwig holder and incremented a separate
-consumer-owned counter from zero to one. This is deployment and integration
-evidence, not a design-partner or customer claim.
+[the integration guide](docs/access-control/integration-guide.md). See
+[Current status](#current-status) for its devnet deployment evidence.
 
 ## Run locally
 
@@ -164,11 +168,14 @@ the membership lifecycle against devnet, see
 ## Repository guide
 
 - [Agent access](docs/agent-access/README.md): product scope and integration evidence
+- [Use cases](docs/use-cases/privacy-control-plane.md): candidate control-plane authorization pattern
 - [Access control](docs/access-control/architecture.md): role model and code map
 - [Integration](docs/access-control/integration-guide.md): actor binding, CPI, and SDK
+- [SDK](sdk/README.md): TypeScript client, PDA helpers, and argument validation
 - [Security](THREAT-MODEL.md): boundaries, risks, and [recorded review](docs/security/reviews/2026-07-24-full-audit.md)
 - [Deployment](docs/deployment/operations.md): operations and [devnet evidence](docs/deployment/evidence/2026-07-24-consumer-devnet-integration.md)
 - [Grants](docs/grants/progress.md): funding and delivery evidence
+- [Claim evals](evals/README.md): offline harness that checks public claims against repository evidence
 - [History](docs/history/README.md): superseded pilot offer and dated records
 - [Roadmap](ROADMAP.md): shipped evidence and next product gates
 - [Contributing](CONTRIBUTING.md): verification and contribution workflow

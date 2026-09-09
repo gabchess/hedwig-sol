@@ -19,10 +19,11 @@ independent adoption and recurring demand are not established.
 
 ## What the role record controls
 
-The consumer authenticates the actor, defines what the role permits, and checks
-current membership. Hedwig verifies that membership is enabled and unexpired.
-A role can be assigned to the agent's own authenticated key; no shared human
-key is required by this pattern.
+The consumer defines what the role permits and must authenticate the actor
+before checking membership; see
+[Caller authentication is an integration requirement](../../THREAT-MODEL.md#caller-authentication-is-an-integration-requirement).
+A role can be assigned to the agent's own authenticated key, so no shared
+human key is required by this pattern.
 
 This is application authorization. Hedwig does not provide key custody, a
 wallet signing policy, arbitrary instruction allowlists, spending limits,

@@ -61,10 +61,11 @@ account constraints bind `Member.role` to the supplied role and `Member.holder`
 to the supplied holder; its handler then rejects disabled roles and elapsed
 memberships.
 
-For CPI use, the consuming program must first authenticate the actor it maps to
-`holder`. A wallet consumer can require a signer. A program identity can use its
-own PDA validation. The consumer then invokes `check_role` and propagates its
-`Result`; propagating an error aborts the consuming instruction.
+For CPI use, the consuming program must authenticate the actor before invoking
+`check_role` and propagating its `Result`; propagating an error aborts the
+consuming instruction. See
+[Caller authentication is an integration requirement](../../THREAT-MODEL.md#caller-authentication-is-an-integration-requirement)
+for the full boundary and why `holder` is not itself a signer requirement.
 
 The repository's reference consumer demonstrates the signer pattern. Its
 counter PDA and stored authority are bound to the signer, the signer is passed

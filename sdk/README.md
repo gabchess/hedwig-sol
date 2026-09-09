@@ -44,10 +44,11 @@ through CPI. See [`app/consumer-demo.ts`](../app/consumer-demo.ts) and its
 
 ## Membership is not authentication
 
-`checkRole` proves that the supplied holder pubkey has an active membership.
-The holder is intentionally not a signer for that instruction. A consuming
+`checkRole` proves membership, not control of the holder key. A consuming
 program must authenticate its own authority and pass that authenticated account
-to Hedwig as the holder.
+to Hedwig as the holder. For the full boundary and the reference consumer's
+binding pattern, see
+[Caller authentication is an integration requirement](../THREAT-MODEL.md#caller-authentication-is-an-integration-requirement).
 
 ## PDA helpers
 

@@ -102,6 +102,8 @@ The current address scheme and instruction set deliberately impose these constra
 
 Supporting multiple orgs per authority or authority rotation would change the state model or instruction surface. It requires a new reviewed decision and migration plan, not a silent change to the deployed program.
 
+Admin and authority rotation is scheduled, not ignored: see [ROADMAP.md](ROADMAP.md#next-build-role-admin-and-org-authority-rotation).
+
 ## Deployment and upgrade authority
 
 As checked on 2026-07-24, the devnet program was upgraded at slot `478655638`
@@ -132,7 +134,7 @@ Before mainnet, the upgrade authority will move to a 2-of-3 Squads multisig. Rem
 
 ## Test evidence
 
-The current 28-test core LiteSVM suite covers:
+The current 29-test core LiteSVM suite covers:
 
 - rejected non-authority role creation;
 - rejected non-admin assignment, revocation, and role toggling;
@@ -141,8 +143,11 @@ The current 28-test core LiteSVM suite covers:
 - revoked, closed, re-granted, and duplicate memberships;
 - disabled-role and re-enable behavior;
 - byte-length boundaries for org and role names;
-- checked `role_count` and `member_count` lifecycle updates; and
-- exact error and unchanged-state assertions on negative paths.
+- checked `role_count` and `member_count` lifecycle updates;
+- exact error and unchanged-state assertions on negative paths; and
+- a pinned by-design case proving `check_role` succeeds for an unrelated
+  caller, so a future contributor cannot silently turn the documented
+  integration contract into a signer requirement.
 
 The 12-test consumer suite covers:
 

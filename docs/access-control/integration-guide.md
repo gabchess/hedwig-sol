@@ -49,9 +49,9 @@ it through Hedwig CPI. The
 the artifact hash, deployment transaction, every proof transaction, and final
 account state.
 
-Do not accept an arbitrary holder pubkey from instruction data and pass it to
-Hedwig. Membership is a claim about a pubkey, not proof that the transaction
-caller controls it.
+Never accept an arbitrary holder pubkey from instruction data and pass it to
+Hedwig; see
+[Caller authentication is an integration requirement](../../THREAT-MODEL.md#caller-authentication-is-an-integration-requirement).
 
 ## TypeScript SDK
 
